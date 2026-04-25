@@ -37,7 +37,7 @@ export default function ModuleContentPage() {
   const sectionIndex = mockSections.findIndex((s) => s.id === section.id)
 
   return (
-    <article className="reveal">
+    <article>
       <Link href={`/training/${params.id}`}>
         <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />

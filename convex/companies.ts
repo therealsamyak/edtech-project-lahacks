@@ -1,5 +1,12 @@
-import { mutation } from "./_generated/server"
+import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
+
+export const getAllCompanies = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("companies").collect()
+  },
+})
 
 function generatePassphrase(): string {
   const adjectives = [

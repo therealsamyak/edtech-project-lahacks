@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useMutation } from "convex/react"
+import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,21 @@ export default function TrainingAccessPage() {
   const [passphrase, setPassphrase] = useState("")
   const router = useRouter()
   const verifyAccess = useMutation(api.training.verifyAccess)
+  const allCompanies = useQuery(api.companies.getAllCompanies)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (allCompanies && allCompanies.length > 0) {
+      console.log("\n========== ALL COMPANIES ==========")
+      allCompanies.forEach((c) => {
+        console.log(`Company: ${c.name}`)
+        console.log(`  UUID:       ${c.uuid}`)
+        console.log(`  Passphrase: ${c.passphrase}`)
+      })
+      console.log("====================================\n")
+    }
+  }, [allCompanies])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,7 +45,7 @@ export default function TrainingAccessPage() {
   }
 
   return (
-    <div className="reveal">
+    <div>
       <div className="grid lg:grid-cols-12 gap-8">
         <div className="lg:col-span-7 max-w-xl">
           <div className="eyebrow mb-2">Step 02 — Access</div>

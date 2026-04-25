@@ -19,7 +19,7 @@ export default function ModuleListPage() {
   })
 
   return (
-    <div className="reveal">
+    <div>
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow mb-2">Curriculum &middot; {companyName}</div>

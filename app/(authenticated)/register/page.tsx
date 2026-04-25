@@ -235,7 +235,7 @@ export default function RegisterCompanyPage() {
             </label>
 
             {uploadedFile && (
-              <div className="mt-5 space-y-3 reveal" aria-live="polite">
+              <div className="mt-5 space-y-3" aria-live="polite">
                 <div
                   className="rounded-md p-3 flex items-start gap-3"
                   style={{ background: "var(--positive-soft)", color: "var(--positive)" }}

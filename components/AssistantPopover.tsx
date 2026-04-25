@@ -71,7 +71,7 @@ export function AssistantPopover() {
           role="dialog"
           aria-modal="false"
           aria-labelledby="assistant-heading"
-          className="fixed bottom-6 right-6 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg reveal"
+          className="fixed bottom-6 right-6 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg"
           style={{
             width: "min(380px, calc(100vw - 2rem))",
             height: "min(520px, calc(100vh - 6rem))",
