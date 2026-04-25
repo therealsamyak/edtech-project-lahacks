@@ -1,9 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,7 +24,18 @@ import {
   ComboboxItem,
   ComboboxEmpty,
 } from "@/components/ui/combobox"
-import { ChevronDown, ChevronUp, Sparkles, Clock, ArrowRight, Building2, Plus } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Clock,
+  ArrowRight,
+  Building2,
+  Plus,
+  Upload,
+  Loader2,
+  Trash2,
+} from "lucide-react"
 
 export default function TrainingAccessPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -33,11 +45,17 @@ export default function TrainingAccessPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set())
+  const [uploadingForCompany, setUploadingForCompany] = useState<string | null>(null)
+  const uploadInputRef = useRef<HTMLInputElement>(null)
+  const pendingCompanyUuid = useRef<string | null>(null)
 
   const router = useRouter()
   const verifyAccess = useMutation(api.training.verifyAccess)
+  const removeUserCompany = useMutation(api.training.removeUserCompany)
   const userCompanies = useQuery(api.training.getUserCompaniesWithModules)
   const allCompanies = useQuery(api.companies.getAllCompanies)
+  const addDocuments = useMutation(api.companies.addDocuments)
+  const generateUploadUrl = useMutation(api.companies.generateUploadUrl)
 
   useEffect(() => {
     if (allCompanies && allCompanies.length > 0) {
@@ -79,8 +97,63 @@ export default function TrainingAccessPage() {
 
   const hasCompanies = userCompanies && userCompanies.length > 0
 
+  const MAX_FILE_SIZE = 50 * 1024 * 1024
+
+  const triggerUpload = (companyUuid: string) => {
+    pendingCompanyUuid.current = companyUuid
+    uploadInputRef.current?.click()
+  }
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    const uuid = pendingCompanyUuid.current
+    if (!uuid) return
+
+    const oversized = files.find((f) => f.size > MAX_FILE_SIZE)
+    if (oversized) {
+      setError(`"${oversized.name}" exceeds the 50 MB limit.`)
+      e.target.value = ""
+      return
+    }
+
+    setUploadingForCompany(uuid)
+
+    try {
+      const uploadedDocs: { storageId: Id<"_storage">; originalName: string }[] = []
+      for (const file of files) {
+        const url = await generateUploadUrl()
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+        if (!res.ok) throw new Error(`Failed to upload "${file.name}"`)
+        const { storageId } = (await res.json()) as { storageId: Id<"_storage"> }
+        uploadedDocs.push({ storageId, originalName: file.name })
+        console.log(`Document uploaded: ${file.name}`)
+      }
+
+      await addDocuments({ companyUuid: uuid, documents: uploadedDocs })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.")
+    } finally {
+      setUploadingForCompany(null)
+      pendingCompanyUuid.current = null
+      e.target.value = ""
+    }
+  }
+
   return (
     <div>
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept=".pdf"
+        multiple
+        onChange={handleFileUpload}
+        className="sr-only"
+      />
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <div className="eyebrow mb-2">Training hub</div>
@@ -118,7 +191,7 @@ export default function TrainingAccessPage() {
                 <Combobox
                   items={allCompanies ?? []}
                   onValueChange={(v) => {
-                    const selected = allCompanies?.find((c) => c._id === v)
+                    const selected = allCompanies?.find((c) => c.name === v)
                     if (selected) {
                       setCompany(selected.name)
                       setUuid(selected.uuid)
@@ -134,7 +207,7 @@ export default function TrainingAccessPage() {
                     <ComboboxEmpty>No companies found.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
-                        <ComboboxItem key={item._id} value={item._id}>
+                        <ComboboxItem key={item._id} value={item.name}>
                           {item.name}
                         </ComboboxItem>
                       )}
@@ -226,8 +299,17 @@ export default function TrainingAccessPage() {
             const isExpanded = expandedCompanies.has(group.companyUuid)
             return (
               <Card key={group.companyUuid} className="elev p-0" size="default">
-                <button
+                {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={() => toggleCompany(group.companyUuid)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
+                      toggleCompany(group.companyUuid)
+                    }
+                  }}
                   className="w-full text-left"
                 >
                   <CardContent className="p-5">
@@ -257,14 +339,53 @@ export default function TrainingAccessPage() {
                           </h2>
                         </div>
                       </div>
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5" style={{ color: "var(--muted)" }} />
-                      ) : (
-                        <ChevronDown className="w-5 h-5" style={{ color: "var(--muted)" }} />
-                      )}
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            triggerUpload(group.companyUuid)
+                          }}
+                          disabled={uploadingForCompany === group.companyUuid}
+                          className="p-1.5 rounded-md transition-colors"
+                          style={{ color: "var(--muted)" }}
+                          aria-label="Upload additional documents"
+                          title="Upload additional documents"
+                        >
+                          {uploadingForCompany === group.companyUuid ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (
+                              confirm(
+                                `Remove "${group.companyName}" from your training hub? You can always add it back.`,
+                              )
+                            ) {
+                              removeUserCompany({ companyUuid: group.companyUuid })
+                            }
+                          }}
+                          className="p-1.5 rounded-md transition-colors hover:bg-red-50"
+                          style={{ color: "var(--destructive)" }}
+                          aria-label="Remove company"
+                          title="Remove company"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5" style={{ color: "var(--muted)" }} />
+                        ) : (
+                          <ChevronDown className="w-5 h-5" style={{ color: "var(--muted)" }} />
+                        )}
+                      </div>
                     </div>
                   </CardContent>
-                </button>
+                </div>
 
                 {isExpanded && group.modules.length > 0 && (
                   <div className="border-t" style={{ borderColor: "var(--line)" }}>

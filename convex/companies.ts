@@ -39,9 +39,22 @@ function generatePassphrase(): string {
   return `${adj}-${noun}-${suffix}`
 }
 
+export const generateUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl()
+  },
+})
+
 export const registerCompany = mutation({
   args: {
     name: v.string(),
+    documents: v.array(
+      v.object({
+        storageId: v.id("_storage"),
+        originalName: v.string(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     const companyId = await ctx.db.insert("companies", {
@@ -51,6 +64,16 @@ export const registerCompany = mutation({
       createdAt: Date.now(),
     })
 
+    for (const doc of args.documents) {
+      await ctx.db.insert("documents", {
+        companyId,
+        storageId: doc.storageId,
+        originalName: doc.originalName,
+        uploadedAt: Date.now(),
+        processingStatus: "pending",
+      })
+    }
+
     const company = await ctx.db.get(companyId)
     console.log(`\n========== COMPANY REGISTERED ==========`)
     console.log(`Company: ${company!.name}`)
@@ -59,5 +82,42 @@ export const registerCompany = mutation({
     console.log(`=========================================\n`)
 
     return { uuid: company!.uuid, passphrase: company!.passphrase }
+  },
+})
+
+export const addDocuments = mutation({
+  args: {
+    companyUuid: v.string(),
+    documents: v.array(
+      v.object({
+        storageId: v.id("_storage"),
+        originalName: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.companyUuid))
+      .unique()
+
+    if (!company) throw new Error("Company not found.")
+
+    for (const doc of args.documents) {
+      await ctx.db.insert("documents", {
+        companyId: company._id,
+        storageId: doc.storageId,
+        originalName: doc.originalName,
+        uploadedAt: Date.now(),
+        processingStatus: "pending",
+      })
+    }
+
+    console.log(`\n========== DOCUMENTS ADDED ==========`)
+    console.log(`Company: ${company.name} (${args.companyUuid})`)
+    console.log(`  Files:  ${args.documents.length}`)
+    console.log(`======================================\n`)
+
+    return { success: true }
   },
 })

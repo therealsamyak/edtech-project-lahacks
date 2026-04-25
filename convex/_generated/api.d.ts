@@ -12,6 +12,7 @@ import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
 import type * as companies from "../companies.js";
 import type * as http from "../http.js";
+import type * as ingestion from "../ingestion.js";
 import type * as quiz from "../quiz.js";
 import type * as seed from "../seed.js";
 import type * as training from "../training.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   companies: typeof companies;
   http: typeof http;
+  ingestion: typeof ingestion;
   quiz: typeof quiz;
   seed: typeof seed;
   training: typeof training;

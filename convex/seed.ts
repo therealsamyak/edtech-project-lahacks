@@ -1,13 +1,36 @@
 import { mutation } from "./_generated/server"
 
-export const seed = mutation({
+export const wipeAndReseed = mutation({
   args: {},
   handler: async (ctx) => {
-    const existing = await ctx.db.query("companies").first()
-    if (existing) {
-      console.log("Seed: companies already exist, skipping.")
-      return { status: "skipped", companyId: existing._id }
-    }
+    let batch
+    do {
+      batch = await ctx.db.query("userCompanies").take(100)
+      for (const doc of batch) {
+        await ctx.db.delete(doc._id)
+      }
+    } while (batch.length > 0)
+
+    do {
+      batch = await ctx.db.query("trainingModules").take(100)
+      for (const doc of batch) {
+        await ctx.db.delete(doc._id)
+      }
+    } while (batch.length > 0)
+
+    do {
+      batch = await ctx.db.query("documents").take(100)
+      for (const doc of batch) {
+        await ctx.db.delete(doc._id)
+      }
+    } while (batch.length > 0)
+
+    do {
+      batch = await ctx.db.query("companies").take(100)
+      for (const doc of batch) {
+        await ctx.db.delete(doc._id)
+      }
+    } while (batch.length > 0)
 
     const companyId = await ctx.db.insert("companies", {
       name: "Acme Corporation",
@@ -15,14 +38,6 @@ export const seed = mutation({
       passphrase: "secure-dolphin-cascade-2026",
       createdAt: Date.now(),
     })
-
-    const company = await ctx.db.get(companyId)
-
-    console.log("\n========== SEEDED COMPANY ==========")
-    console.log(`Company: ${company!.name}`)
-    console.log(`  UUID:       ${company!.uuid}`)
-    console.log(`  Passphrase: ${company!.passphrase}`)
-    console.log("=====================================\n")
 
     const modules = [
       {

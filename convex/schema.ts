@@ -41,10 +41,19 @@ export default defineSchema({
     completedAt: v.number(),
   }),
   userCompanies: defineTable({
-    tokenIdentifier: v.string(),
+    userId: v.id("users"),
     companyId: v.id("companies"),
     verifiedAt: v.number(),
   })
-    .index("by_tokenIdentifier", ["tokenIdentifier"])
-    .index("by_tokenIdentifier_companyId", ["tokenIdentifier", "companyId"]),
+    .index("by_userId", ["userId"])
+    .index("by_userId_companyId", ["userId", "companyId"]),
+  documents: defineTable({
+    companyId: v.id("companies"),
+    storageId: v.id("_storage"),
+    originalName: v.string(),
+    uploadedAt: v.number(),
+    processingStatus: v.optional(v.string()),
+  })
+    .index("by_companyId", ["companyId"])
+    .index("by_companyId_status", ["companyId", "processingStatus"]),
 })
