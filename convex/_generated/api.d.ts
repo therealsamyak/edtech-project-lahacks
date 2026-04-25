@@ -8,9 +8,13 @@
  * @module
  */
 
+import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
+import type * as companies from "../companies.js";
 import type * as http from "../http.js";
-import type * as myFunctions from "../myFunctions.js";
+import type * as quiz from "../quiz.js";
+import type * as seed from "../seed.js";
+import type * as training from "../training.js";
 
 import type {
   ApiFromModules,
@@ -19,9 +23,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  assistant: typeof assistant;
   auth: typeof auth;
+  companies: typeof companies;
   http: typeof http;
-  myFunctions: typeof myFunctions;
+  quiz: typeof quiz;
+  seed: typeof seed;
+  training: typeof training;
 }>;
 
 /**
