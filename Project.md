@@ -25,6 +25,27 @@ One backend, two surfaces. Learner is the primary user (Light the Way). MCP inte
 
 Ninety seconds. Hits Light the Way, Cognition, World, ElevenLabs, Figma Make.
 
+## Setup (after pulling main)
+
+```bash
+npm install                   # root deps (Convex, Next.js, etc.)
+cd mcp-server && npm install  # MCP server deps
+cd ..
+npm run dev                   # starts Convex + Next.js together
+```
+
+The compliance MCP server is the Cognition play. Connecting it to your IDE:
+
+- **Claude Code**: nothing extra — `.mcp.json` at the repo root auto-loads. Run `/mcp` inside Claude Code to confirm `compliance` is listed.
+- **Cursor**: `.cursor/mcp.json` is committed too — restart Cursor, then go to Settings → MCP and toggle `compliance` on.
+- **Windsurf**: edit `~/.codeium/windsurf/mcp_config.json` — copy-paste snippet in `mcp-server/README.md`.
+
+Smoke test it from any client:
+
+> "Use the compliance MCP server to check whether `console.log('patient ' + patient.ssn)` is HIPAA-compliant. If it isn't, rewrite it."
+
+It should call `check_compliance`, return a §164.312(b) violation, and rewrite the line. Full details and a per-tool reference are in [`mcp-server/README.md`](mcp-server/README.md).
+
 ## Team split (start in parallel)
 
 A — Backend/AI: Convex schema, PDF ingest + chunk + embed, summary/quiz/QA actions, vector search.
@@ -35,14 +56,14 @@ C — Integrations: ElevenLabs streaming TTS, World ID IDKit, MCP server (Node, 
 
 ## Timeline (30 hours)
 
-| Hours | Milestone |
-|---|---|
-| 0–3 | Schema locked, Figma Make wireframes, all three SDK spikes (IDKit, ElevenLabs, MCP) working |
-| 3–10 | RAG pipeline ingesting PDFs/URLs; learner UI rendering summaries; voice TTS playing |
+| Hours | Milestone                                                                                                        |
+| ----- | ---------------------------------------------------------------------------------------------------------------- |
+| 0–3   | Schema locked, Figma Make wireframes, all three SDK spikes (IDKit, ElevenLabs, MCP) working                      |
+| 3–10  | RAG pipeline ingesting PDFs/URLs; learner UI rendering summaries; voice TTS playing                              |
 | 10–18 | Quizzes + Q&A live; World ID gate on enrollment; MCP server exposing `check_compliance` and `get_policy_section` |
-| 18–24 | Demo wired end-to-end; accessibility pass; per-company isolation tested |
-| 24–28 | Bug bash, demo rehearsal x3, Devpost copy + video |
-| 28–30 | Buffer |
+| 18–24 | Demo wired end-to-end; accessibility pass; per-company isolation tested                                          |
+| 24–28 | Bug bash, demo rehearsal x3, Devpost copy + video                                                                |
+| 28–30 | Buffer                                                                                                           |
 
 ## Schema
 
