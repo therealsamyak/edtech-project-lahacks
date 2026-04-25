@@ -8,9 +8,11 @@
  * @module
  */
 
+import type * as ai_service from "../ai_service.js";
 import type * as auth from "../auth.js";
+import type * as compliance from "../compliance.js";
 import type * as http from "../http.js";
-import type * as myFunctions from "../myFunctions.js";
+import type * as ingest from "../ingest.js";
 
 import type {
   ApiFromModules,
@@ -19,9 +21,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai_service: typeof ai_service;
   auth: typeof auth;
+  compliance: typeof compliance;
   http: typeof http;
-  myFunctions: typeof myFunctions;
+  ingest: typeof ingest;
 }>;
 
 /**
