@@ -59,7 +59,7 @@ export default function QuizPage() {
     const passed = result.passed
 
     return (
-      <article className="reveal max-w-2xl mx-auto">
+      <article className="max-w-2xl mx-auto">
         <Link href={`/training/${params.id}/${params.moduleId}`}>
           <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
             <ChevronLeft className="w-4 h-4" aria-hidden="true" />
@@ -123,7 +123,7 @@ export default function QuizPage() {
   }
 
   return (
-    <article className="reveal max-w-2xl mx-auto">
+    <article className="max-w-2xl mx-auto">
       <Link href={`/training/${params.id}/${params.moduleId}`}>
         <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />
