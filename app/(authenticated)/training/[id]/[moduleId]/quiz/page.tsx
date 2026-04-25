@@ -60,12 +60,11 @@ export default function QuizPage() {
 
     return (
       <article className="reveal max-w-2xl mx-auto">
-        <Link
-          href={`/training/${params.id}/${params.moduleId}`}
-          className="btn btn-ghost mb-6 -ml-2 inline-flex items-center gap-1"
-        >
-          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          <span>Back to module</span>
+        <Link href={`/training/${params.id}/${params.moduleId}`}>
+          <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+            <span>Back to module</span>
+          </Button>
         </Link>
 
         <Card className="elev-md p-0" size="default">
@@ -125,12 +124,11 @@ export default function QuizPage() {
 
   return (
     <article className="reveal max-w-2xl mx-auto">
-      <Link
-        href={`/training/${params.id}/${params.moduleId}`}
-        className="btn btn-ghost mb-6 -ml-2 inline-flex items-center gap-1"
-      >
-        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-        <span>Back to module</span>
+      <Link href={`/training/${params.id}/${params.moduleId}`}>
+        <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          <span>Back to module</span>
+        </Button>
       </Link>
 
       {/* Header + progress */}

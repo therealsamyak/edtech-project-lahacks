@@ -299,12 +299,12 @@ export default function RegisterCompanyPage() {
 
       <div className="mt-8">
         <Link
-          href="/"
+          href="/training"
           className="inline-flex items-center gap-1.5 text-sm transition-colors"
           style={{ color: "var(--accent)" }}
         >
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-          Back to Dashboard
+          Back to Training
         </Link>
       </div>
     </div>
