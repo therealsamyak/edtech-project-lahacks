@@ -1,12 +1,14 @@
-import { HTTPClient, OpenRouter } from "@openrouter/sdk"
+import { embed, generateText } from "ai"
+import { createOpenRouter } from "@openrouter/ai-sdk-provider"
 
 export interface ComplianceAIServiceConfig {
   apiKey?: string
-  model?: string
+  complianceModels?: string[]
+  quizModels?: string[]
   httpReferer?: string
   appTitle?: string
   timeoutMs?: number
-  httpClient?: HTTPClient
+  fetch?: typeof fetch
 }
 
 export interface ComplianceActionResult {
@@ -26,7 +28,17 @@ interface QuizPayload {
   items?: unknown
 }
 
-const DEFAULT_MODEL = "openrouter/free"
+const COMPLIANCE_MODELS = [
+  "tencent/hy3-preview:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "openai/gpt-oss-120b:free",
+]
+
+const QUIZ_MODELS = [
+  "openai/gpt-oss-120b:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "tencent/hy3-preview:free",
+]
 
 const COMPLIANCE_SYSTEM_PROMPT = [
   "You are a senior Compliance Officer assistant.",
@@ -43,11 +55,10 @@ const QUIZ_SYSTEM_PROMPT = [
 ].join(" ")
 
 export class ComplianceAIService {
-  private readonly client: OpenRouter
-  private readonly model: string
-  private readonly apiKey: string
-  private readonly httpReferer?: string
-  private readonly appTitle?: string
+  private readonly openrouter!: ReturnType<typeof createOpenRouter>
+  private readonly complianceModels: string[]
+  private readonly quizModels: string[]
+  private readonly timeoutMs?: number
 
   constructor(config: ComplianceAIServiceConfig = {}) {
     const apiKey = config.apiKey ?? process.env.OPENROUTER_API_KEY
@@ -56,61 +67,84 @@ export class ComplianceAIService {
       throw new Error("Missing OPENROUTER_API_KEY for ComplianceAIService.")
     }
 
-    this.apiKey = apiKey
-    this.model = config.model ?? process.env.OPENROUTER_MODEL ?? DEFAULT_MODEL
-    this.httpReferer = config.httpReferer ?? process.env.OPENROUTER_HTTP_REFERER
-    this.appTitle = config.appTitle ?? process.env.OPENROUTER_APP_TITLE
+    this.complianceModels =
+      config.complianceModels && config.complianceModels.length > 0
+        ? config.complianceModels
+        : COMPLIANCE_MODELS
 
-    this.client = new OpenRouter({
+    this.quizModels =
+      config.quizModels && config.quizModels.length > 0 ? config.quizModels : QUIZ_MODELS
+
+    const httpReferer = config.httpReferer ?? process.env.OPENROUTER_HTTP_REFERER
+    const appTitle = config.appTitle ?? process.env.OPENROUTER_APP_TITLE
+
+    this.openrouter = createOpenRouter({
       apiKey,
-      httpReferer: this.httpReferer,
-      appTitle: this.appTitle,
-      timeoutMs: config.timeoutMs,
-      httpClient: config.httpClient,
+      appUrl: httpReferer,
+      appName: appTitle,
+      compatibility: "strict",
+      fetch: config.fetch,
     })
+
+    this.timeoutMs = config.timeoutMs
+  }
+
+  private async generateTextWithFailover(params: {
+    models: string[]
+    system: string
+    prompt: string
+    temperature?: number
+  }): Promise<{ text: string; model: string }> {
+    let lastError: unknown
+
+    for (const modelName of params.models) {
+      try {
+        const response = await generateText({
+          model: this.openrouter.chat(modelName),
+          system: params.system,
+          prompt: params.prompt,
+          ...(params.temperature !== undefined ? { temperature: params.temperature } : {}),
+          ...(this.timeoutMs ? { timeout: this.timeoutMs } : {}),
+        })
+
+        const text = response.text.trim()
+        if (!text) {
+          lastError = new Error(`Empty response from model: ${modelName}`)
+          continue
+        }
+
+        return {
+          text,
+          model: response.response.modelId ?? modelName,
+        }
+      } catch (err) {
+        lastError = err
+      }
+    }
+
+    const errorMessage = lastError instanceof Error ? lastError.message : String(lastError)
+    throw new Error(`All models failed. Last error: ${errorMessage}`)
   }
 
   async generateComplianceAction(
     context: string,
     userQuery: string,
   ): Promise<ComplianceActionResult> {
-    const trimmedContext = context.trim()
-    const trimmedUserQuery = userQuery.trim()
-
-    if (!trimmedContext) {
-      throw new Error("generateComplianceAction requires non-empty context.")
-    }
-
-    if (!trimmedUserQuery) {
-      throw new Error("generateComplianceAction requires a non-empty userQuery.")
-    }
-
-    const response = await this.client.chat.send({
-      chatRequest: {
-        model: this.model,
-        stream: false,
-        messages: [
-          {
-            role: "system",
-            content: COMPLIANCE_SYSTEM_PROMPT,
-          },
-          {
-            role: "user",
-            content: [
-              "Compliance Context:",
-              trimmedContext,
-              "",
-              "User Query:",
-              trimmedUserQuery,
-              "",
-              "Respond with recommended compliance actions and rationale tied to the context.",
-            ].join("\n"),
-          },
-        ],
-      },
+    const response = await this.generateTextWithFailover({
+      models: this.complianceModels,
+      system: COMPLIANCE_SYSTEM_PROMPT,
+      prompt: [
+        "Compliance Context:",
+        context.trim(),
+        "",
+        "User Query:",
+        userQuery.trim(),
+        "",
+        "Respond with recommended compliance actions and rationale tied to the context.",
+      ].join("\n"),
     })
 
-    const answer = extractResponseText(response)
+    const answer = response.text
 
     if (!answer) {
       throw new Error("Compliance model returned an empty response.")
@@ -123,233 +157,45 @@ export class ComplianceAIService {
   }
 
   async generateQuiz(sectionContent: string): Promise<QuizItem[]> {
-    const trimmedSection = sectionContent.trim()
-
-    if (!trimmedSection) {
-      throw new Error("generateQuiz requires non-empty sectionContent.")
-    }
-
-    const createQuizRequest = () => ({
-      chatRequest: {
-        model: this.model,
-        stream: false as const,
-        temperature: 0,
-        responseFormat: {
-          type: "json_object" as const,
-        },
-        messages: [
-          {
-            role: "system" as const,
-            content: QUIZ_SYSTEM_PROMPT,
-          },
-          {
-            role: "user" as const,
-            content: [
-              "Section Content:",
-              trimmedSection,
-              "",
-              "Return this exact JSON shape:",
-              '{"quiz":[{"question":"...","options":["A","B","C","D"],"correctAnswer":"..."}]}',
-              "",
-              "Rules:",
-              "- Include 3 to 5 questions.",
-              "- `correctAnswer` must be one of the options exactly.",
-            ].join("\n"),
-          },
-        ],
-      },
+    const response = await this.generateTextWithFailover({
+      models: this.quizModels,
+      system: QUIZ_SYSTEM_PROMPT,
+      prompt: [
+        "Section Content:",
+        sectionContent.trim(),
+        "",
+        "Return this exact JSON shape:",
+        '{"quiz":[{"question":"...","options":["A","B","C","D"],"correctAnswer":"..."}]}',
+        "",
+        "Rules:",
+        "- Include 3 to 5 questions.",
+        "- `correctAnswer` must be one of the options exactly.",
+      ].join("\n"),
+      temperature: 0,
     })
 
-    const response = await this.sendQuizRequestWithFallback(createQuizRequest)
-    let rawText = extractResponseText(response)
-
-    if (!rawText) {
-      const retryResponse = await this.sendQuizRequestWithFallback(createQuizRequest)
-      rawText = extractResponseText(retryResponse)
-    }
+    const rawText = response.text
 
     if (!rawText) {
       throw new Error(`Quiz model returned an empty response (model: ${response.model}).`)
     }
 
     const parsed = safeJsonParse(rawText)
-    const quizItems = normalizeQuizItems(parsed)
-
-    if (quizItems.length === 0) {
-      throw new Error("Quiz response JSON did not contain any quiz items.")
-    }
-
-    return quizItems
-  }
-
-  private async sendQuizRequestWithFallback(
-    buildRequest: () => {
-      chatRequest: {
-        model: string
-        stream: false
-        temperature: number
-        responseFormat: { type: "json_object" }
-        messages: Array<{ role: "system" | "user"; content: string }>
-      }
-    },
-  ): Promise<{ choices: Array<{ message: { content?: unknown } }>; model: string }> {
-    try {
-      const response = await this.client.chat.send(buildRequest())
-      return response
-    } catch (error) {
-      if (!isResponseValidationError(error)) {
-        throw error
-      }
-
-      return this.sendQuizRequestViaFetch(buildRequest().chatRequest)
-    }
-  }
-
-  private async sendQuizRequestViaFetch(request: {
-    model: string
-    stream: false
-    temperature: number
-    responseFormat: { type: "json_object" }
-    messages: Array<{ role: "system" | "user"; content: string }>
-  }): Promise<{ choices: Array<{ message: { content?: unknown } }>; model: string }> {
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
-      "Content-Type": "application/json",
-    }
-
-    if (this.httpReferer) {
-      headers["HTTP-Referer"] = this.httpReferer
-    }
-
-    if (this.appTitle) {
-      headers["X-OpenRouter-Title"] = this.appTitle
-    }
-
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        model: request.model,
-        stream: false,
-        temperature: request.temperature,
-        response_format: {
-          type: "json_object",
-        },
-        messages: request.messages,
-      }),
-    })
-
-    if (!response.ok) {
-      const text = await response.text()
-      throw new Error(
-        `OpenRouter fallback request failed (${response.status}): ${text.slice(0, 300)}`,
-      )
-    }
-
-    const json = (await response.json()) as {
-      choices?: Array<{ message?: { content?: unknown } }>
-      model?: string
-    }
-
-    if (!Array.isArray(json.choices)) {
-      throw new Error("OpenRouter fallback response did not include choices.")
-    }
-
-    return {
-      choices: json.choices.map((choice) => ({
-        message: {
-          content: choice.message?.content,
-        },
-      })),
-      model: typeof json.model === "string" ? json.model : request.model,
-    }
+    return normalizeQuizItems(parsed)
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
     const trimmedText = text.trim()
     if (!trimmedText) throw new Error("Text cannot be empty for embedding.")
 
-    const response = await fetch("https://openrouter.ai/api/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": this.httpReferer ?? "",
-        "X-OpenRouter-Title": this.appTitle ?? "",
-      },
-      body: JSON.stringify({
-        model: "openai/text-embedding-3-small",
-        input: trimmedText,
-      }),
+    const response = await embed({
+      model: this.openrouter.textEmbeddingModel("openai/text-embedding-3-small"),
+      value: trimmedText,
+      ...(this.timeoutMs ? { abortSignal: AbortSignal.timeout(this.timeoutMs) } : {}),
     })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`Embedding failed: ${errorText}`)
-    }
-
-    const json = await response.json()
-    return json.data[0].embedding
+    return response.embedding
   }
-}
-
-function isResponseValidationError(error: unknown): boolean {
-  return (
-    error instanceof Error && error.message.toLowerCase().includes("response validation failed")
-  )
-}
-
-function extractResponseText(response: {
-  choices: Array<{
-    message: { content?: unknown; refusal?: unknown; reasoning?: unknown }
-  }>
-}): string {
-  const message = response.choices[0]?.message
-  const content = message?.content
-
-  if (typeof content === "string") {
-    return content.trim()
-  }
-
-  if (Array.isArray(content)) {
-    return content
-      .map((item) => {
-        if (typeof item === "string") {
-          return item
-        }
-
-        if (
-          typeof item === "object" &&
-          item !== null &&
-          "text" in item &&
-          typeof (item as { text?: unknown }).text === "string"
-        ) {
-          return (item as { text: string }).text
-        }
-
-        return ""
-      })
-      .join("")
-      .trim()
-  }
-
-  if (typeof message?.refusal === "string") {
-    return message.refusal.trim()
-  }
-
-  if (typeof message?.reasoning === "string") {
-    return message.reasoning.trim()
-  }
-
-  if (typeof content === "object" && content !== null) {
-    try {
-      return JSON.stringify(content)
-    } catch {
-      return ""
-    }
-  }
-
-  return ""
 }
 
 function safeJsonParse(text: string): unknown {

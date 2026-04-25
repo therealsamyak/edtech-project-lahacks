@@ -6,8 +6,18 @@ import * as bcrypt from "bcryptjs"
 export const createCompliance = mutation({
   args: { name: v.string() },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error("Unauthenticated")
+
     const suffix = Math.floor(Math.random() * 9000) + 1000
     const complianceId = `${args.name.toLowerCase().replace(/\s+/g, "-")}-${suffix}`
+
+    const existing = await ctx.db
+      .query("compliances")
+      .withIndex("by_compliance_id", (q) => q.eq("complianceId", complianceId))
+      .unique()
+
+    if (existing) return existing._id
 
     const charset = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
     let rawPassphrase = ""
@@ -21,6 +31,7 @@ export const createCompliance = mutation({
       name: args.name,
       complianceId,
       passphrase: hashed,
+      createdBy: identity.tokenIdentifier,
     })
 
     return { complianceId, rawPassphrase }
@@ -104,5 +115,17 @@ export const getModulesByCompliance = query({
 
     const uniqueModules = [...new Set(chunks.map((c) => c.module))]
     return uniqueModules.filter((name) => name.length > 3)
+  },
+})
+
+export const getComplianceOwner = query({
+  args: { complianceId: v.string() },
+  handler: async (ctx, args) => {
+    const record = await ctx.db
+      .query("compliances")
+      .withIndex("by_compliance_id", (q) => q.eq("complianceId", args.complianceId))
+      .unique()
+
+    return record ? { id: record.createdBy } : null
   },
 })

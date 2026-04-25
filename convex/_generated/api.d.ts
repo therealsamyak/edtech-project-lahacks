@@ -19,6 +19,7 @@ import type * as ingestion from "../ingestion.js";
 import type * as quiz from "../quiz.js";
 import type * as seed from "../seed.js";
 import type * as training from "../training.js";
+import type * as user from "../user.js";
 import type * as voice from "../voice.js";
 import type * as voiceAgent from "../voiceAgent.js";
 
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   quiz: typeof quiz;
   seed: typeof seed;
   training: typeof training;
+  user: typeof user;
   voice: typeof voice;
   voiceAgent: typeof voiceAgent;
 }>;

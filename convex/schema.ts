@@ -9,12 +9,12 @@ export default defineSchema({
   users: defineTable({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    phone: v.optional(v.string()),
-    image: v.optional(v.string()),
+    tokenIdentifier: v.string(),
+    progress: v.optional(v.record(v.string(), v.record(v.string(), v.number()))),
     emailVerificationTime: v.optional(v.number()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-  }),
+  }).index("by_token", ["tokenIdentifier"]),
   companies: defineTable({
     name: v.string(),
     uuid: v.string(),
@@ -68,6 +68,7 @@ export default defineSchema({
     complianceId: v.string(),
     name: v.string(),
     passphrase: v.string(),
+    createdBy: v.string(),
   }).index("by_compliance_id", ["complianceId"]),
   complianceDocs: defineTable({
     complianceId: v.string(),
