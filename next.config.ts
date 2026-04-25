@@ -1,7 +1,7 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["sk-cachyos"],
+  /* config options here */
 }
 
 export default nextConfig
