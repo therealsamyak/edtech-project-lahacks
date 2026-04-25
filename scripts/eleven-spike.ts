@@ -47,8 +47,8 @@ async function main() {
 
   // Collect the streaming response into a single Buffer so we can save + play.
   const chunks: Uint8Array[] = []
-  for await (const chunk of audio) {
-    chunks.push(chunk as Uint8Array)
+  for await (const chunk of audio as unknown as AsyncIterable<Uint8Array>) {
+    chunks.push(chunk)
   }
   const buffer = Buffer.concat(chunks)
 
@@ -61,8 +61,11 @@ async function main() {
   // Auto-play (requires an audio player on the system; on macOS this uses afplay/mpg123 if available).
   // If `play` cannot find a player, this throws — that's fine, the file on disk is the proof.
   try {
-    const playable = Buffer.from(buffer)
-    await play(playable as unknown as ArrayBuffer)
+    // The SDK accepts an async iterable of Uint8Array; wrap our buffer in one.
+    async function* once(b: Buffer): AsyncIterable<Uint8Array> {
+      yield b
+    }
+    await play(once(buffer))
     console.error("[voice-spike] played audio")
   } catch (err) {
     console.error(

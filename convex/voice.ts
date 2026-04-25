@@ -40,8 +40,8 @@ export const synthesize = action({
     })
 
     const chunks: Uint8Array[] = []
-    for await (const chunk of audioStream) {
-      chunks.push(chunk as Uint8Array)
+    for await (const chunk of audioStream as unknown as AsyncIterable<Uint8Array>) {
+      chunks.push(chunk)
     }
     const audioBuffer = Buffer.concat(chunks)
 
