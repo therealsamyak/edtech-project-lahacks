@@ -28,7 +28,7 @@ export const submitQuiz = mutation({
     if (identity) {
       const user = await ctx.db
         .query("users")
-        .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+        .withIndex("email", (q) => q.eq("email", identity.email!))
         .first()
 
       if (user) {
