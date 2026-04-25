@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "oxlint --fix .",
     "format": "oxfmt .",
-    "check": "oxlint . --ignore-path=\"convex/_generated/**\" && oxfmt . --check"
+    "check": "oxlint . --ignore-path=\"convex/_generated/**\" && oxfmt . --check",
+    "prepare": "lefthook install"
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.91",
@@ -24,6 +25,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "dotenv": "^17.4.2",
+    "lefthook": "^2.1.6",
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
     "tailwindcss": "^4.2.2",
