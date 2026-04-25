@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "useTabs": false,
+  "tabWidth": 2,
+  "endOfLine": "lf",
+  "ignorePatterns": ["convex/_generated/**"]
+}
