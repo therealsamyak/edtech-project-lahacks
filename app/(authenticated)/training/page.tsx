@@ -65,7 +65,7 @@ export default function TrainingAccessPage() {
     setIsLoading(true)
     setError("")
     try {
-      const result = await verifyAccess({ company, uuid, passphrase })
+      await verifyAccess({ company, uuid, passphrase })
       setDialogOpen(false)
       setCompany("")
       setUuid("")
@@ -108,7 +108,11 @@ export default function TrainingAccessPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm mb-1.5" style={{ color: "var(--ink)" }}>
+                <label
+                  htmlFor="company-select"
+                  className="block text-sm mb-1.5"
+                  style={{ color: "var(--ink)" }}
+                >
                   Company
                 </label>
                 <Combobox
@@ -122,6 +126,7 @@ export default function TrainingAccessPage() {
                   }}
                 >
                   <ComboboxInput
+                    id="company-select"
                     placeholder="Select a company…"
                     className="h-9 bg-input-background border-line"
                   />

@@ -128,9 +128,13 @@ export default function SignIn() {
                 <Label htmlFor="password" className="text-ink">
                   Password
                 </Label>
-                <a href="#" className="text-xs" style={{ color: "var(--accent)" }}>
+                <button
+                  type="button"
+                  className="text-xs font-medium underline underline-offset-2 hover:no-underline cursor-pointer transition-all"
+                  style={{ color: "var(--accent)", background: "none", border: "none", padding: 0 }}
+                >
                   Forgot?
-                </a>
+                </button>
               </div>
               <Input
                 id="password"

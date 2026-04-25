@@ -6,8 +6,8 @@ export const getModule = query({
     moduleId: v.id("trainingModules"),
   },
   handler: async (ctx, args) => {
-    const module = await ctx.db.get(args.moduleId)
-    return module ?? null
+    const moduleData = await ctx.db.get(args.moduleId)
+    return moduleData ?? null
   },
 })
 

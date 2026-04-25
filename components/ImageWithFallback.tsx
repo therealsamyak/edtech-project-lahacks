@@ -30,7 +30,7 @@ export function ImageWithFallback({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={FALLBACK_SVG}
-          alt="Error loading image"
+          alt="Error"
           data-original-url={typeof src === "string" ? src : undefined}
         />
       </div>

@@ -7,12 +7,12 @@ export const submitQuiz = mutation({
     answers: v.array(v.number()),
   },
   handler: async (ctx, args) => {
-    const module = await ctx.db.get(args.moduleId)
-    if (!module) {
+    const moduleData = await ctx.db.get(args.moduleId)
+    if (!moduleData) {
       throw new Error("Module not found")
     }
 
-    const questions = module.quizQuestions
+    const questions = moduleData.quizQuestions
     const totalQuestions = questions.length
 
     let score = 0

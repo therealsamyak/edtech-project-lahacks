@@ -162,7 +162,6 @@ export function AssistantPopover() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask a question…"
-              autoFocus
             />
             <Button
               type="submit"
