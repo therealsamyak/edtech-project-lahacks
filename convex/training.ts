@@ -1,6 +1,16 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
 
+export const getModule = query({
+  args: {
+    moduleId: v.id("trainingModules"),
+  },
+  handler: async (ctx, args) => {
+    const module = await ctx.db.get(args.moduleId)
+    return module ?? null
+  },
+})
+
 export const getModules = query({
   args: {
     companyId: v.string(),
