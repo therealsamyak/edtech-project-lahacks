@@ -310,17 +310,9 @@ export default function TrainingAccessPage() {
             const isExpanded = expandedCompanies.has(group.companyUuid)
             return (
               <Card key={group.companyUuid} className="elev p-0" size="default">
-                {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-                <div
-                  role="button"
-                  tabIndex={0}
+                <button
+                  type="button"
                   onClick={() => toggleCompany(group.companyUuid)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault()
-                      toggleCompany(group.companyUuid)
-                    }
-                  }}
                   className="w-full text-left"
                 >
                   <CardContent className="p-5">
@@ -410,7 +402,7 @@ export default function TrainingAccessPage() {
                       </div>
                     </div>
                   </CardContent>
-                </div>
+                </button>
 
                 {isExpanded && group.modules.length > 0 && (
                   <div className="border-t" style={{ borderColor: "var(--line)" }}>
