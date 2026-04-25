@@ -13,8 +13,12 @@ async function main() {
     })
 
     console.log("SUCCESS")
-    console.log("ID:", result.complianceId)
-    console.log("PASS:", result.rawPassphrase)
+    if (typeof result === "object" && result !== null && "complianceId" in result) {
+      console.log(result.complianceId)
+    }
+    if (typeof result === "object" && result !== null && "rawPassphrase" in result) {
+      console.log(result.rawPassphrase)
+    }
   } catch (error) {
     console.error("FAILURE:", error)
   }
