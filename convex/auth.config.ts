@@ -1,4 +1,4 @@
-import { AuthConfig } from "convex/server";
+import { AuthConfig } from "convex/server"
 
 export default {
   providers: [
@@ -7,4 +7,4 @@ export default {
       applicationID: "convex",
     },
   ],
-} satisfies AuthConfig;
+} satisfies AuthConfig
