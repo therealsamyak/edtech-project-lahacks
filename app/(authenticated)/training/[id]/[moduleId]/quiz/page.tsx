@@ -3,16 +3,17 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { useMutation } from "convex/react"
+import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { getSection } from "@/lib/training-data"
 import { Check, ChevronLeft, ChevronRight, Award } from "lucide-react"
 
 export default function QuizPage() {
   const params = useParams<{ id: string; moduleId: string }>()
-  const section = getSection(params.moduleId)
+  const moduleData = useQuery(api.training.getModule, {
+    moduleId: params.moduleId as any,
+  })
   const submitQuiz = useMutation(api.quiz.submitQuiz)
 
   const [index, setIndex] = useState(0)
@@ -25,17 +26,26 @@ export default function QuizPage() {
   } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!section) {
+  if (moduleData === undefined) {
     return (
       <div>
-        <p>Module not found.</p>
-        <Link href={`/training/${params.id}`}>&larr; Back to modules</Link>
+        <p style={{ color: "var(--muted)" }}>Loading module…</p>
       </div>
     )
   }
 
-  const total = section.quizQuestions.length
-  const current = section.quizQuestions[index]
+  if (!moduleData || moduleData.quizQuestions.length === 0) {
+    return (
+      <div>
+        <p>No quiz available for this module.</p>
+        <Link href={`/training/${params.id}/${params.moduleId}`}>&larr; Back to module</Link>
+      </div>
+    )
+  }
+
+  const quizQuestions = moduleData.quizQuestions
+  const total = quizQuestions.length
+  const current = quizQuestions[index]
   const selected = answers[index]
   const hasAnswered = selected !== undefined
   const isLast = index === total - 1
@@ -131,14 +141,13 @@ export default function QuizPage() {
         </Button>
       </Link>
 
-      {/* Header + progress */}
       <header className="mb-6">
-        <div className="eyebrow mb-2">Quiz &middot; {section.title}</div>
+        <div className="eyebrow mb-2">Quiz &middot; {moduleData.title}</div>
         <div className="flex items-center justify-between gap-4">
           <h1 className="font-display m-0" style={{ fontSize: "1.5rem", fontWeight: 500 }}>
             Question {index + 1} of {total}
           </h1>
-          <span className="tag">{section.topic}</span>
+          <span className="tag">{moduleData.topics[0] ?? "Training"}</span>
         </div>
         <div
           className="mt-4 h-1.5 rounded-full overflow-hidden"
@@ -170,7 +179,7 @@ export default function QuizPage() {
             </legend>
 
             <div className="space-y-2.5">
-              {current.options.map((option, oIndex) => {
+              {current.options.map((option: string, oIndex: number) => {
                 const isSelected = selected === oIndex
                 return (
                   <label
@@ -214,7 +223,6 @@ export default function QuizPage() {
         </CardContent>
       </Card>
 
-      {/* Navigation */}
       <div className="mt-6 flex items-center justify-between gap-3">
         <Button
           variant="outline"
