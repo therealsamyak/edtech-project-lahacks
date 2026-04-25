@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
@@ -29,6 +29,19 @@ export default function TrainingAccessPage() {
   const router = useRouter()
   const verifyAccess = useMutation(api.training.verifyAccess)
   const userCompanies = useQuery(api.training.getUserCompaniesWithModules)
+  const allCompanies = useQuery(api.companies.getAllCompanies)
+
+  useEffect(() => {
+    if (allCompanies && allCompanies.length > 0) {
+      console.log("\n========== ALL COMPANIES ==========")
+      allCompanies.forEach((c) => {
+        console.log(`Company: ${c.name}`)
+        console.log(`  UUID:       ${c.uuid}`)
+        console.log(`  Passphrase: ${c.passphrase}`)
+      })
+      console.log("====================================\n")
+    }
+  }, [allCompanies])
 
   const toggleCompany = (uuid: string) => {
     setExpandedCompanies((prev) => {
