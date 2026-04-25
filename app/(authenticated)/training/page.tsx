@@ -17,6 +17,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
   Combobox,
   ComboboxInput,
   ComboboxContent,
@@ -83,7 +94,7 @@ export default function TrainingAccessPage() {
     setIsLoading(true)
     setError("")
     try {
-      await verifyAccess({ company, uuid, passphrase })
+      await verifyAccess({ company: company || undefined, uuid, passphrase })
       setDialogOpen(false)
       setCompany("")
       setUuid("")
@@ -186,7 +197,7 @@ export default function TrainingAccessPage() {
                   className="block text-sm mb-1.5"
                   style={{ color: "var(--ink)" }}
                 >
-                  Company
+                  Company <span style={{ color: "var(--muted)" }}>(optional)</span>
                 </label>
                 <Combobox
                   items={allCompanies ?? []}
@@ -358,25 +369,39 @@ export default function TrainingAccessPage() {
                             <Upload className="w-4 h-4" />
                           )}
                         </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (
-                              confirm(
-                                `Remove "${group.companyName}" from your training hub? You can always add it back.`,
-                              )
-                            ) {
-                              removeUserCompany({ companyUuid: group.companyUuid })
-                            }
-                          }}
-                          className="p-1.5 rounded-md transition-colors hover:bg-red-50"
-                          style={{ color: "var(--destructive)" }}
-                          aria-label="Remove company"
-                          title="Remove company"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <AlertDialog>
+                          <AlertDialogTrigger
+                            className="p-1.5 rounded-md transition-colors hover:bg-red-50"
+                            style={{ color: "var(--destructive)" }}
+                            aria-label="Remove company"
+                            title="Remove company"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Remove &ldquo;{group.companyName}&rdquo;?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will remove the company from your training hub. You can always
+                                add it back later.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                variant="destructive"
+                                onClick={() =>
+                                  removeUserCompany({ companyUuid: group.companyUuid })
+                                }
+                              >
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                         {isExpanded ? (
                           <ChevronUp className="w-5 h-5" style={{ color: "var(--muted)" }} />
                         ) : (

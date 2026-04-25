@@ -36,7 +36,7 @@ export const getModules = query({
 
 export const verifyAccess = mutation({
   args: {
-    company: v.string(),
+    company: v.optional(v.string()),
     uuid: v.string(),
     passphrase: v.string(),
   },
@@ -51,8 +51,12 @@ export const verifyAccess = mutation({
       .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
       .unique()
 
-    if (!match || match.name !== args.company || match.passphrase !== args.passphrase) {
-      throw new Error("Invalid credentials. Please check your company, UUID, and passphrase.")
+    if (!match || match.passphrase !== args.passphrase) {
+      throw new Error("Invalid credentials. Please check your UUID and passphrase.")
+    }
+
+    if (args.company !== undefined && match.name !== args.company) {
+      throw new Error("Company name does not match the UUID provided.")
     }
 
     const existing = await ctx.db
