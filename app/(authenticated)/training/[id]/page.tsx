@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams } from "next/navigation"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
@@ -10,13 +10,12 @@ import { Clock, ArrowRight } from "lucide-react"
 
 export default function ModuleListPage() {
   const params = useParams<{ id: string }>()
-  const companyId = params.id
-  const searchParams = useSearchParams()
-  const companyName = searchParams.get("name") ?? "Company"
+  const companyUuid = params.id
 
-  const modules = useQuery(api.training.getModules, {
-    companyId,
-  })
+  const company = useQuery(api.training.getCompanyByUuid, { uuid: companyUuid })
+  const modules = useQuery(api.training.getModules, { companyId: companyUuid })
+
+  const companyName = company?.name ?? "Company"
 
   return (
     <div>
@@ -44,7 +43,6 @@ export default function ModuleListPage() {
               <Card className="elev p-0" size="default">
                 <CardContent className="p-5">
                   <article className="flex items-center gap-5">
-                    {/* Index badge */}
                     <div
                       className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
                       style={{
@@ -64,7 +62,6 @@ export default function ModuleListPage() {
                       </span>
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 eyebrow mb-1">
                         <span>{module.topics[0]}</span>
@@ -87,8 +84,7 @@ export default function ModuleListPage() {
                       </p>
                     </div>
 
-                    {/* CTA */}
-                    <Link href={`/training/${companyId}/${module._id}`} className="shrink-0">
+                    <Link href={`/training/${companyUuid}/${module._id}`} className="shrink-0">
                       <Button variant="outline">
                         <span>Open module</span>
                         <ArrowRight className="w-4 h-4" />
@@ -104,7 +100,7 @@ export default function ModuleListPage() {
 
       <div className="mt-8">
         <Link href="/training" className="text-sm" style={{ color: "var(--muted)" }}>
-          &larr; Back to access
+          &larr; Back to training hub
         </Link>
       </div>
     </div>
