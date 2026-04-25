@@ -40,4 +40,11 @@ export default defineSchema({
     passed: v.boolean(),
     completedAt: v.number(),
   }),
+  userCompanies: defineTable({
+    userId: v.id("users"),
+    companyId: v.id("companies"),
+    verifiedAt: v.number(),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_companyId", ["userId", "companyId"]),
 })
