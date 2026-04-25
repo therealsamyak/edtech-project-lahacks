@@ -1,6 +1,8 @@
 import { ShieldCheck } from "lucide-react"
 import { SignOutButton } from "@/components/SignOutButton"
 import { AuthGuard } from "@/components/AuthGuard"
+import TabBar from "@/components/TabBar"
+import { AssistantPopover } from "@/components/AssistantPopover"
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -30,7 +32,10 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full">{children}</main>
+        <main className="max-w-6xl mx-auto px-6 py-10 flex-1 w-full">
+          <TabBar />
+          {children}
+        </main>
 
         <footer className="max-w-6xl mx-auto px-6 py-8 mt-8 w-full border-t border-line">
           <div className="flex flex-wrap items-center justify-between gap-3 eyebrow">
@@ -38,6 +43,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
             <span>Privacy &middot; Terms &middot; Accessibility</span>
           </div>
         </footer>
+
+        <AssistantPopover />
       </div>
     </AuthGuard>
   )

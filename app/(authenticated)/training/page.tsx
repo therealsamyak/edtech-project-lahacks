@@ -24,7 +24,7 @@ export default function TrainingAccessPage() {
     setError("")
     try {
       const result = await verifyAccess({ company, uuid, passphrase })
-      router.push(`/training/${result.uuid}`)
+      router.push(`/training/${result.uuid}?name=${encodeURIComponent(company)}`)
     } catch (err) {
       setIsLoading(false)
       setError(err instanceof Error ? err.message : "Invalid credentials. Please try again.")

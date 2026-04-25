@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,6 +11,8 @@ import { Clock, ArrowRight } from "lucide-react"
 export default function ModuleListPage() {
   const params = useParams<{ id: string }>()
   const companyId = params.id
+  const searchParams = useSearchParams()
+  const companyName = searchParams.get("name") ?? "Company"
 
   const modules = useQuery(api.training.getModules, {
     companyId,
@@ -20,7 +22,7 @@ export default function ModuleListPage() {
     <div className="reveal">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="eyebrow mb-2">Curriculum &middot; {companyId}</div>
+          <div className="eyebrow mb-2">Curriculum &middot; {companyName}</div>
           <h1 className="font-display" style={{ fontWeight: 500 }}>
             Your training modules.
           </h1>

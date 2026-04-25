@@ -38,12 +38,11 @@ export default function ModuleContentPage() {
 
   return (
     <article className="reveal">
-      <Link
-        href={`/training/${params.id}`}
-        className="btn btn-ghost mb-6 -ml-2 inline-flex items-center gap-1"
-      >
-        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-        <span>All modules</span>
+      <Link href={`/training/${params.id}`}>
+        <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          <span>All modules</span>
+        </Button>
       </Link>
 
       <header className="mb-8">
