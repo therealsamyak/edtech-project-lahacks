@@ -41,10 +41,10 @@ export default defineSchema({
     completedAt: v.number(),
   }),
   userCompanies: defineTable({
-    userId: v.id("users"),
+    tokenIdentifier: v.string(),
     companyId: v.id("companies"),
     verifiedAt: v.number(),
   })
-    .index("by_userId", ["userId"])
-    .index("by_userId_companyId", ["userId", "companyId"]),
+    .index("by_tokenIdentifier", ["tokenIdentifier"])
+    .index("by_tokenIdentifier_companyId", ["tokenIdentifier", "companyId"]),
 })

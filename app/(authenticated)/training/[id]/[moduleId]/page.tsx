@@ -38,7 +38,7 @@ export default function ModuleContentPage() {
     return (
       <div>
         <p>Module not found.</p>
-        <Link href={`/training/${params.id}`}>&larr; Back to modules</Link>
+        <Link href="/training">&larr; Back to modules</Link>
       </div>
     )
   }
@@ -53,7 +53,7 @@ export default function ModuleContentPage() {
 
   return (
     <article>
-      <Link href={`/training/${params.id}`}>
+      <Link href="/training">
         <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
           <ChevronLeft className="w-4 h-4" aria-hidden="true" />
           <span>All modules</span>

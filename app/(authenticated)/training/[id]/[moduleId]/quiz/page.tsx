@@ -122,7 +122,7 @@ export default function QuizPage() {
               <Link href={`/training/${params.id}/${params.moduleId}`}>
                 <Button variant="outline">Review module</Button>
               </Link>
-              <Link href={`/training/${params.id}`}>
+              <Link href="/training">
                 <Button>Finish</Button>
               </Link>
             </div>

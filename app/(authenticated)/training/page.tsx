@@ -15,6 +15,14 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxContent,
+  ComboboxList,
+  ComboboxItem,
+  ComboboxEmpty,
+} from "@/components/ui/combobox"
 import { ChevronDown, ChevronUp, Sparkles, Clock, ArrowRight, Building2, Plus } from "lucide-react"
 
 export default function TrainingAccessPage() {
@@ -100,22 +108,34 @@ export default function TrainingAccessPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label
-                  htmlFor="company"
-                  className="block text-sm mb-1.5"
-                  style={{ color: "var(--ink)" }}
-                >
+                <label className="block text-sm mb-1.5" style={{ color: "var(--ink)" }}>
                   Company
                 </label>
-                <Input
-                  id="company"
-                  type="text"
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  placeholder="Acme Corporation"
-                  className="h-9 bg-input-background border-line"
-                  required
-                />
+                <Combobox
+                  items={allCompanies ?? []}
+                  onValueChange={(v) => {
+                    const selected = allCompanies?.find((c) => c._id === v)
+                    if (selected) {
+                      setCompany(selected.name)
+                      setUuid(selected.uuid)
+                    }
+                  }}
+                >
+                  <ComboboxInput
+                    placeholder="Select a company…"
+                    className="h-9 bg-input-background border-line"
+                  />
+                  <ComboboxContent>
+                    <ComboboxEmpty>No companies found.</ComboboxEmpty>
+                    <ComboboxList>
+                      {(item) => (
+                        <ComboboxItem key={item._id} value={item._id}>
+                          {item.name}
+                        </ComboboxItem>
+                      )}
+                    </ComboboxList>
+                  </ComboboxContent>
+                </Combobox>
               </div>
 
               <div>
