@@ -31,9 +31,9 @@ export const seed = mutation({
         description:
           "Understanding how to handle personal data, customer information, and ensuring compliance with GDPR. Covers data collection, storage, processing, and deletion requirements.",
         content:
-          "GDPR establishes strict rules for how organizations collect, store, and process personal data of EU residents. As an employee, you are responsible for handling customer information lawfully — collecting only what is necessary, retaining it only as long as needed, and respecting individuals' rights to access, correct, or delete their data.",
+          "GDPR establishes strict rules for how organizations collect, store, and process personal data of EU residents. As an employee, you are responsible for handling customer information lawfully — collecting only what is necessary, retaining it only as long as needed, and respecting individuals' rights to access, correct, or delete their data.\n\nWhen in doubt, ask before sharing data outside your team. The cost of a violation is significant, but the cost of trust lost is greater.",
         duration: "8 min read",
-        topics: ["Privacy"],
+        topics: ["Privacy", "Data handling", "Compliance"],
         highlights: [
           "Collect the minimum data necessary for the purpose.",
           "Honor deletion requests within 30 days.",
@@ -78,9 +78,9 @@ export const seed = mutation({
         description:
           "Creating a safe and respectful workplace environment. Recognizing harassment, reporting procedures, and fostering an inclusive culture that values every team member.",
         content:
-          "A safe workplace is built daily by every member of the team. This module explains what behaviors qualify as harassment, how to recognize subtle forms of exclusion, and how to use reporting channels confidently and confidentially.",
+          "A safe workplace is built daily by every member of the team. This module explains what behaviors qualify as harassment, how to recognize subtle forms of exclusion, and how to use reporting channels confidently and confidentially.\n\nBystander intervention is encouraged — if you see something, you can say something, in the way that feels safest to you.",
         duration: "6 min read",
-        topics: ["People"],
+        topics: ["People", "Safety", "Culture"],
         highlights: [
           "Reports can be made anonymously through the HR portal.",
           "Retaliation against reporters is itself a violation.",
@@ -115,9 +115,9 @@ export const seed = mutation({
         description:
           "Protecting company assets and data from cyber threats. Covers password management, phishing awareness, secure communication, and incident response protocols.",
         content:
-          "Most security incidents start with a single click. This module helps you spot phishing attempts, choose strong passwords, use multi-factor authentication effectively, and respond appropriately if you suspect an account or device has been compromised.",
+          "Most security incidents start with a single click. This module helps you spot phishing attempts, choose strong passwords, use multi-factor authentication effectively, and respond appropriately if you suspect an account or device has been compromised.\n\nThe IT team would rather you over-report than under-report.",
         duration: "7 min read",
-        topics: ["Security"],
+        topics: ["Security", "IT", "Awareness"],
         highlights: [
           "Use a password manager and unique passwords per service.",
           "Verify unexpected requests on a second channel.",
