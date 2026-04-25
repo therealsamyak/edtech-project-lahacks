@@ -7,6 +7,8 @@
     "predev": "convex init && node setup.mjs --once",
     "build": "next build",
     "start": "next start",
+    "test:ai": "tsx scripts/test-ai.ts",
+    "test": "vitest run",
     "lint": "oxlint --fix .",
     "format": "oxfmt .",
     "check": "oxlint . --ignore-path=\"convex/_generated/**\" && oxfmt . --check",
@@ -14,6 +16,7 @@
   },
   "dependencies": {
     "@convex-dev/auth": "^0.0.91",
+    "@openrouter/sdk": "^0.12.21",
     "convex": "^1.36.1",
     "next": "16.2.4",
     "react": "^19.2.5",
@@ -29,6 +32,8 @@
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
     "tailwindcss": "^4.2.2",
-    "typescript": "^5.9.3"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
   }
 }
