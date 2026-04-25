@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
+import { auth } from "./auth"
 
 export const getModule = query({
   args: {
@@ -40,8 +41,8 @@ export const verifyAccess = mutation({
     passphrase: v.string(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
+    const userId = await auth.getUserId(ctx)
+    if (!userId) {
       throw new Error("You must be logged in to verify access.")
     }
 
@@ -54,18 +55,14 @@ export const verifyAccess = mutation({
       throw new Error("Invalid credentials. Please check your company, UUID, and passphrase.")
     }
 
-    const tokenIdentifier = identity.tokenIdentifier
-
     const existing = await ctx.db
       .query("userCompanies")
-      .withIndex("by_tokenIdentifier_companyId", (q) =>
-        q.eq("tokenIdentifier", tokenIdentifier).eq("companyId", match._id),
-      )
+      .withIndex("by_userId_companyId", (q) => q.eq("userId", userId).eq("companyId", match._id))
       .unique()
 
     if (!existing) {
       await ctx.db.insert("userCompanies", {
-        tokenIdentifier,
+        userId,
         companyId: match._id,
         verifiedAt: Date.now(),
       })
@@ -78,14 +75,12 @@ export const verifyAccess = mutation({
 export const getUserCompaniesWithModules = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return []
-
-    const tokenIdentifier = identity.tokenIdentifier
+    const userId = await auth.getUserId(ctx)
+    if (!userId) return []
 
     const userCompanies = await ctx.db
       .query("userCompanies")
-      .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", tokenIdentifier))
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
     const result = []
@@ -107,6 +102,36 @@ export const getUserCompaniesWithModules = query({
     }
 
     return result
+  },
+})
+
+export const removeUserCompany = mutation({
+  args: {
+    companyUuid: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx)
+    if (!userId) {
+      throw new Error("You must be logged in.")
+    }
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.companyUuid))
+      .unique()
+
+    if (!company) {
+      throw new Error("Company not found.")
+    }
+
+    const existing = await ctx.db
+      .query("userCompanies")
+      .withIndex("by_userId_companyId", (q) => q.eq("userId", userId).eq("companyId", company._id))
+      .unique()
+
+    if (existing) {
+      await ctx.db.delete(existing._id)
+    }
   },
 })
 

@@ -4,6 +4,7 @@ import { useState, useRef } from "react"
 import Link from "next/link"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
+import type { Id } from "@/convex/_generated/dataModel"
 import {
   Upload,
   Copy,
@@ -11,36 +12,85 @@ import {
   ArrowLeft,
   Info,
   FileText,
-  Database,
   KeyRound,
   Hash,
+  X,
+  Loader2,
 } from "lucide-react"
 
+const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
+
 export default function RegisterCompanyPage() {
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null)
+  const [companyName, setCompanyName] = useState("")
+  const [files, setFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [credentialsShown, setCredentialsShown] = useState(false)
   const [credentials, setCredentials] = useState<{ uuid: string; passphrase: string } | null>(null)
   const [copiedField, setCopiedField] = useState<"uuid" | "passphrase" | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const registerCompany = useMutation(api.companies.registerCompany)
+  const generateUploadUrl = useMutation(api.companies.generateUploadUrl)
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const isSubmitDisabled = !companyName.trim() || files.length === 0 || isUploading || isProcessing
 
-    setUploadedFile(file.name)
-    setIsProcessing(true)
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files ?? [])
+    if (selected.length === 0) return
+
+    const oversized = selected.find((f) => f.size > MAX_FILE_SIZE)
+    if (oversized) {
+      setError(`"${oversized.name}" exceeds the 50 MB limit.`)
+      return
+    }
+
+    setFiles((prev) => [...prev, ...selected])
+    setError(null)
+    // Reset input so re-selecting the same file works
+    e.target.value = ""
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = async () => {
+    if (isSubmitDisabled) return
+    setIsUploading(true)
+    setError(null)
 
     try {
-      const result = await registerCompany({ name: file.name })
+      const uploadedDocs: { storageId: Id<"_storage">; originalName: string }[] = []
+
+      for (const file of files) {
+        const url = await generateUploadUrl()
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": file.type },
+          body: file,
+        })
+        if (!res.ok) throw new Error(`Failed to upload "${file.name}"`)
+        const { storageId } = (await res.json()) as { storageId: Id<"_storage"> }
+        uploadedDocs.push({ storageId, originalName: file.name })
+        console.log(`Document uploaded: ${file.name}`)
+      }
+
+      setIsUploading(false)
+      setIsProcessing(true)
+      const result = await registerCompany({
+        name: companyName.trim(),
+        documents: uploadedDocs,
+      })
       setCredentials(result)
       setTimeout(() => {
         setIsProcessing(false)
         setCredentialsShown(true)
       }, 800)
-    } catch {
+    } catch (err) {
+      setIsUploading(false)
       setIsProcessing(false)
+      setError(err instanceof Error ? err.message : "Something went wrong.")
     }
   }
 
@@ -64,7 +114,6 @@ export default function RegisterCompanyPage() {
       </header>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        {/* Credentials — LEFT column */}
         <section className="lg:col-span-3 card elev" aria-labelledby="cred-heading">
           <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-2">
@@ -185,7 +234,6 @@ export default function RegisterCompanyPage() {
           </div>
         </section>
 
-        {/* Upload — RIGHT column */}
         <section className="lg:col-span-2 card elev" aria-labelledby="upload-heading">
           <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-2">
@@ -199,11 +247,30 @@ export default function RegisterCompanyPage() {
               </h2>
             </div>
             <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-              PDF only · up to 50 MB
+              PDF only · up to 50 MB per file
             </p>
           </div>
 
-          <div className="p-6">
+          <div className="p-6 space-y-5">
+            <div>
+              <label htmlFor="company-name" className="eyebrow mb-1.5 block">
+                Company name
+              </label>
+              <input
+                id="company-name"
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. Acme Corp"
+                className="w-full rounded-md px-3 py-2.5 text-sm outline-none transition-colors"
+                style={{
+                  background: "var(--paper)",
+                  border: "1px solid var(--line)",
+                  color: "var(--ink)",
+                }}
+              />
+            </div>
+
             <label
               htmlFor="file-upload"
               className="block rounded-md p-6 text-center cursor-pointer transition-colors"
@@ -216,10 +283,12 @@ export default function RegisterCompanyPage() {
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf"
+                multiple
                 onChange={handleFileSelect}
                 className="sr-only"
                 id="file-upload"
                 aria-describedby="upload-help"
+                disabled={isUploading || isProcessing}
               />
               <FileText
                 className="w-7 h-7 mx-auto mb-3"
@@ -227,72 +296,107 @@ export default function RegisterCompanyPage() {
                 aria-hidden="true"
               />
               <div className="text-sm" style={{ color: "var(--ink)" }}>
-                {uploadedFile ?? "Choose a PDF or drag it here"}
+                {files.length > 0
+                  ? `${files.length} file${files.length > 1 ? "s" : ""} selected — add more`
+                  : "Choose PDFs or drag them here"}
               </div>
               <div id="upload-help" className="text-xs mt-1" style={{ color: "var(--muted)" }}>
-                Your file stays private to your organization.
+                Your files stay private to your organization.
               </div>
             </label>
 
-            {uploadedFile && (
-              <div className="mt-5 space-y-3" aria-live="polite">
-                <div
-                  className="rounded-md p-3 flex items-start gap-3"
-                  style={{ background: "var(--positive-soft)", color: "var(--positive)" }}
-                >
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-                  <div className="text-sm">
-                    <div style={{ fontWeight: 500 }}>File received</div>
-                    <div className="text-xs mt-0.5" style={{ color: "var(--ink-soft)" }}>
-                      {uploadedFile}
-                    </div>
-                  </div>
-                </div>
-
-                {isProcessing && (
-                  <div className="rounded-md p-4" style={{ background: "var(--accent-soft)" }}>
-                    <div
-                      className="flex items-center gap-2 text-sm"
-                      style={{ color: "var(--accent)" }}
-                    >
-                      <Database className="w-4 h-4" aria-hidden="true" />
-                      <span>Processing documentation…</span>
-                    </div>
-                    <div
-                      className="mt-3 h-1.5 rounded-full overflow-hidden"
-                      style={{ background: "rgba(47,74,122,0.18)" }}
-                      role="progressbar"
-                      aria-label="Indexing"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                    >
-                      <div
-                        className="h-full rounded-full"
-                        style={{ background: "var(--accent)", width: "70%" }}
-                      />
-                    </div>
-                    <div className="text-xs mt-2" style={{ color: "var(--ink-soft)" }}>
-                      Tokenizing, embedding, and indexing for retrieval.
-                    </div>
-                  </div>
-                )}
-
-                {!isProcessing && (
-                  <div
-                    className="rounded-md p-3 flex items-start gap-3"
-                    style={{ background: "var(--positive-soft)", color: "var(--positive)" }}
+            {files.length > 0 && (
+              <ul className="space-y-2" aria-label="Selected files">
+                {files.map((file, i) => (
+                  <li
+                    key={`${file.name}-${i}`}
+                    className="rounded-md p-3 flex items-center gap-3"
+                    style={{ background: "var(--paper)", border: "1px solid var(--line)" }}
                   >
-                    <Check className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-                    <div className="text-sm">
-                      <div style={{ fontWeight: 500 }}>Ready for training</div>
-                      <div className="text-xs mt-0.5" style={{ color: "var(--ink-soft)" }}>
-                        Your documentation is indexed and searchable.
-                      </div>
-                    </div>
-                  </div>
-                )}
+                    <FileText
+                      className="w-4 h-4 shrink-0"
+                      style={{ color: "var(--ink-soft)" }}
+                      aria-hidden="true"
+                    />
+                    <span className="flex-1 text-sm truncate" style={{ color: "var(--ink)" }}>
+                      {file.name}
+                    </span>
+                    <span className="text-xs shrink-0" style={{ color: "var(--muted)" }}>
+                      {(file.size / 1024 / 1024).toFixed(1)} MB
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="p-1 rounded transition-colors"
+                      style={{ color: "var(--ink-soft)" }}
+                      aria-label={`Remove ${file.name}`}
+                      disabled={isUploading || isProcessing}
+                    >
+                      <X className="w-3.5 h-3.5" aria-hidden="true" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {error && (
+              <div
+                className="rounded-md p-3 text-sm"
+                style={{ background: "var(--warning-soft)", color: "var(--ink-soft)" }}
+                role="alert"
+              >
+                {error}
               </div>
             )}
+
+            {(isUploading || isProcessing) && (
+              <div className="rounded-md p-4" style={{ background: "var(--accent-soft)" }}>
+                <div className="flex items-center gap-2 text-sm" style={{ color: "var(--accent)" }}>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  <span>
+                    {isUploading
+                      ? `Uploading ${files.length} file${files.length > 1 ? "s" : ""}…`
+                      : "Processing documentation…"}
+                  </span>
+                </div>
+                <div
+                  className="mt-3 h-1.5 rounded-full overflow-hidden"
+                  style={{ background: "rgba(47,74,122,0.18)" }}
+                  role="progressbar"
+                  aria-label="Uploading"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      background: "var(--accent)",
+                      width: isUploading ? "40%" : "70%",
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
+                <div className="text-xs mt-2" style={{ color: "var(--ink-soft)" }}>
+                  {isUploading
+                    ? "Sending files to secure storage."
+                    : "Tokenizing, embedding, and indexing for retrieval."}
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled}
+              className="w-full rounded-md px-4 py-2.5 text-sm font-medium transition-colors"
+              style={{
+                background: isSubmitDisabled ? "var(--line)" : "var(--accent)",
+                color: isSubmitDisabled ? "var(--muted)" : "var(--surface)",
+                cursor: isSubmitDisabled ? "not-allowed" : "pointer",
+              }}
+            >
+              {isUploading ? "Uploading…" : isProcessing ? "Processing…" : "Register company"}
+            </button>
           </div>
         </section>
       </div>
