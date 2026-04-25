@@ -1,29 +1,44 @@
 "use client"
 
 import { ConversationProvider, useConversation } from "@elevenlabs/react"
+import { Mic, MicOff } from "lucide-react"
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+
+interface VoiceAgentProps {
+  agentId: string
+  /**
+   * Optional company / compliance context. When provided, it's forwarded to the
+   * agent as a dynamic variable named `compliance_id` so the system prompt can
+   * reference it and the server tool can scope its lookup to that company.
+   */
+  complianceId?: string
+}
 
 /**
- * Voice agent wrapper. Drop into any page that needs the spoken tutor:
+ * Drop-in voice tutor. Embed inside a popover, drawer, or page.
  *
- *   <VoiceAgent agentId={process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID!} />
+ *   <VoiceAgent
+ *     agentId={process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID!}
+ *     complianceId={params.id}
+ *   />
  *
- * The agent is configured in the ElevenLabs dashboard (system prompt, voice, server
- * tool pointing at /voice-agent/ask). See docs/voice-agent.md for the full setup.
+ * The agent itself (system prompt, voice, server tool) is configured once in
+ * the ElevenLabs dashboard. See docs/voice-agent.md.
  */
-export function VoiceAgent({ agentId }: { agentId: string }) {
+export function VoiceAgent({ agentId, complianceId }: VoiceAgentProps) {
   return (
     <ConversationProvider
       onConnect={() => console.info("[voice-agent] connected")}
       onDisconnect={() => console.info("[voice-agent] disconnected")}
       onError={(err) => console.error("[voice-agent] error:", err)}
     >
-      <VoiceAgentControls agentId={agentId} />
+      <VoiceAgentControls agentId={agentId} complianceId={complianceId} />
     </ConversationProvider>
   )
 }
 
-function VoiceAgentControls({ agentId }: { agentId: string }) {
+function VoiceAgentControls({ agentId, complianceId }: VoiceAgentProps) {
   const conversation = useConversation()
   const { status, isSpeaking, startSession, endSession } = conversation
   const [error, setError] = useState<string | null>(null)
@@ -34,72 +49,85 @@ function VoiceAgentControls({ agentId }: { agentId: string }) {
   const handleStart = async () => {
     setError(null)
     try {
-      // Browser must have mic permission before the WebRTC connection opens.
       await navigator.mediaDevices.getUserMedia({ audio: true })
     } catch {
       setError("Microphone access is required to talk to the tutor.")
       return
     }
     try {
-      await startSession({ agentId })
+      const sessionArgs: { agentId: string; dynamicVariables?: Record<string, string> } = {
+        agentId,
+      }
+      if (complianceId) {
+        sessionArgs.dynamicVariables = { compliance_id: complianceId }
+      }
+      await startSession(sessionArgs)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      setError(`Could not start the agent: ${msg}`)
+      setError(`Could not start the agent: ${err instanceof Error ? err.message : String(err)}`)
     }
-  }
-
-  const handleEnd = () => {
-    void endSession()
   }
 
   const statusLine = (() => {
     if (isConnecting) return "Connecting…"
-    if (!isConnected) return "Idle"
-    return isSpeaking ? "Tutor is speaking…" : "Listening to you…"
+    if (!isConnected) return "Tap to start"
+    return isSpeaking ? "Tutor speaking…" : "Listening…"
+  })()
+
+  const dotColor = (() => {
+    if (isSpeaking) return "var(--positive)"
+    if (isConnected) return "var(--accent)"
+    if (isConnecting) return "var(--secondary)"
+    return "var(--muted)"
   })()
 
   return (
-    <div className="flex flex-col items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--ink-soft)" }}>
         <span
           aria-hidden
-          className={`h-2 w-2 rounded-full ${
-            isConnected
-              ? isSpeaking
-                ? "animate-pulse bg-emerald-500"
-                : "bg-sky-500"
-              : isConnecting
-                ? "animate-pulse bg-amber-500"
-                : "bg-slate-400"
+          className={`h-2 w-2 rounded-full ${isConnected && isSpeaking ? "animate-pulse" : ""} ${
+            isConnecting ? "animate-pulse" : ""
           }`}
+          style={{ background: dotColor }}
         />
-        <span className="font-medium">{statusLine}</span>
+        <span style={{ fontWeight: 500 }}>{statusLine}</span>
       </div>
 
       {isConnected ? (
-        <button
+        <Button
           type="button"
-          onClick={handleEnd}
-          className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-rose-700"
+          variant="outline"
+          onClick={() => void endSession()}
+          className="inline-flex items-center gap-2"
         >
-          End conversation
-        </button>
+          <MicOff className="size-4" aria-hidden="true" />
+          <span>End conversation</span>
+        </Button>
       ) : (
-        <button
+        <Button
           type="button"
           onClick={handleStart}
           disabled={isConnecting}
-          className="rounded-lg bg-slate-700 px-5 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-600 dark:hover:bg-slate-500"
+          className="inline-flex items-center gap-2"
         >
-          {isConnecting ? "Connecting…" : "Talk to your tutor"}
-        </button>
+          <Mic className="size-4" aria-hidden="true" />
+          <span>{isConnecting ? "Connecting…" : "Talk to your tutor"}</span>
+        </Button>
       )}
 
       {error && (
-        <p role="alert" className="max-w-xs text-center text-xs text-rose-600 dark:text-rose-400">
+        <p
+          role="alert"
+          className="max-w-xs text-center text-xs"
+          style={{ color: "var(--negative, #b91c1c)" }}
+        >
           {error}
         </p>
       )}
+
+      <p className="text-xs text-center" style={{ color: "var(--muted)" }}>
+        Voice answers come from your company's compliance docs.
+      </p>
     </div>
   )
 }

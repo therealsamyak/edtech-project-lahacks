@@ -1,4 +1,5 @@
 import { httpAction } from "./_generated/server"
+import { api } from "./_generated/api"
 
 /**
  * Webhook called by the ElevenLabs Conversational AI agent when it needs a
@@ -7,19 +8,19 @@ import { httpAction } from "./_generated/server"
  *
  *   <CONVEX_HTTP_URL>/voice-agent/ask
  *
- * The tool's parameters should match the JSON body shape below
- * (complianceId: string, question: string).
+ * The tool's parameters should match the JSON body shape below:
+ *   { complianceId: string, question: string }
  *
- * For now this returns a clearly-labeled mock so the wiring can be tested
- * end-to-end without depending on Falak's `convex/ingest.ts`. Once that file
- * lands on main, swap the mock for:
+ * We delegate to `api.assistant.chat`, which is the team's own RAG entry point.
+ * Today that action returns a stub string; once Falak wires real retrieval into
+ * convex/assistant.ts, this webhook automatically returns grounded answers
+ * with no further changes here.
  *
- *   const result = await ctx.runAction(api.ingest.askQuestion, {
- *     complianceId, question,
- *   })
- *   return jsonResponse(result)
+ * `complianceId` is captured and forwarded in the response for traceability,
+ * but assistant.chat doesn't currently accept it as an arg. When that signature
+ * is widened (per-company scoping), add it to the `runAction` args below.
  */
-export const askComplianceWebhook = httpAction(async (_ctx, request) => {
+export const askComplianceWebhook = httpAction(async (ctx, request) => {
   if (request.method !== "POST") {
     return jsonResponse({ error: "method_not_allowed" }, 405)
   }
@@ -35,20 +36,23 @@ export const askComplianceWebhook = httpAction(async (_ctx, request) => {
   const complianceId = typeof args.complianceId === "string" ? args.complianceId : undefined
   const question = typeof args.question === "string" ? args.question : undefined
 
-  if (!complianceId || !question) {
-    return jsonResponse({ error: "missing_args", required: ["complianceId", "question"] }, 400)
+  if (!question) {
+    return jsonResponse({ error: "missing_args", required: ["question"] }, 400)
   }
 
-  // TODO: replace with `ctx.runAction(api.ingest.askQuestion, { complianceId, question })`
-  // once Falak's RAG action lands on main.
-  const mockAnswer =
-    `Per the company's policy for ${complianceId}, the answer to "${question}" is: ` +
-    `well-run compliance training delivers legal defense support, helps avoid litigation, ` +
-    `mitigates damages, and demonstrates good-faith effort to comply with applicable law. ` +
-    `(This is a placeholder response from the voice-agent webhook stub. ` +
-    `Real grounded answers come from convex/ingest.ts once it merges.)`
-
-  return jsonResponse({ answer: mockAnswer, source: "stub" })
+  try {
+    const answer = await ctx.runAction(api.assistant.chat, { message: question })
+    return jsonResponse({ answer, source: "assistant.chat", complianceId })
+  } catch (err) {
+    console.error("[voice-agent webhook] assistant.chat failed:", err)
+    return jsonResponse(
+      {
+        error: "assistant_failed",
+        message: err instanceof Error ? err.message : String(err),
+      },
+      500,
+    )
+  }
 })
 
 function jsonResponse(payload: unknown, status = 200): Response {
