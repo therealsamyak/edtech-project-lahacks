@@ -40,6 +40,11 @@ export const verifyAccess = mutation({
     passphrase: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      throw new Error("You must be logged in to verify access.")
+    }
+
     const match = await ctx.db
       .query("companies")
       .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
@@ -49,30 +54,21 @@ export const verifyAccess = mutation({
       throw new Error("Invalid credentials. Please check your company, UUID, and passphrase.")
     }
 
-    // Persist access for logged-in user
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("email", (q) => q.eq("email", identity.email!))
-        .unique()
+    const tokenIdentifier = identity.tokenIdentifier
 
-      if (user) {
-        const existing = await ctx.db
-          .query("userCompanies")
-          .withIndex("by_userId_companyId", (q) =>
-            q.eq("userId", user._id).eq("companyId", match._id),
-          )
-          .unique()
+    const existing = await ctx.db
+      .query("userCompanies")
+      .withIndex("by_tokenIdentifier_companyId", (q) =>
+        q.eq("tokenIdentifier", tokenIdentifier).eq("companyId", match._id),
+      )
+      .unique()
 
-        if (!existing) {
-          await ctx.db.insert("userCompanies", {
-            userId: user._id,
-            companyId: match._id,
-            verifiedAt: Date.now(),
-          })
-        }
-      }
+    if (!existing) {
+      await ctx.db.insert("userCompanies", {
+        tokenIdentifier,
+        companyId: match._id,
+        verifiedAt: Date.now(),
+      })
     }
 
     return { name: match.name, uuid: match.uuid }
@@ -85,16 +81,11 @@ export const getUserCompaniesWithModules = query({
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) return []
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("email", (q) => q.eq("email", identity.email!))
-      .unique()
-
-    if (!user) return []
+    const tokenIdentifier = identity.tokenIdentifier
 
     const userCompanies = await ctx.db
       .query("userCompanies")
-      .withIndex("by_userId", (q) => q.eq("userId", user._id))
+      .withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", tokenIdentifier))
       .collect()
 
     const result = []
