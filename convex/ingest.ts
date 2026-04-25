@@ -24,26 +24,40 @@ export const ingestComplianceDoc = action({
     const response = await fetch(url)
     const data = await pdf(Buffer.from(await response.arrayBuffer()))
 
-    const chunks: string[] = []
-    for (let i = 0; i < data.text.length; i += 800) {
-      chunks.push(data.text.slice(i, i + 1000))
+    const text = data.text
+    const sections = text.split(/\n(?=[0-9A-Z]{2,}\s)/g)
+
+    const moduleMap = new Map<string, string>()
+
+    for (const section of sections) {
+      const trimmed = section.trim()
+      if (trimmed.length < 50) continue
+
+      const lines = trimmed.split("\n")
+      const moduleName = lines[0].trim().slice(0, 50)
+
+      const existingText = moduleMap.get(moduleName) || ""
+      moduleMap.set(moduleName, existingText + "\n\n" + trimmed)
     }
 
-    const processed = await Promise.all(
-      chunks.map(async (chunk) => {
-        const embedding = await ctx.runAction(internal.ai_service.generateEmbedding, {
-          text: chunk,
-        })
-        return { text: chunk, embedding }
-      }),
-    )
+    const processed = []
+    for (const [name, content] of moduleMap.entries()) {
+      const embedding: number[] = await ctx.runAction(internal.ai_service.generateEmbedding, {
+        text: content.slice(0, 5000),
+      })
 
+      processed.push({
+        module: name,
+        text: content,
+        embedding,
+      })
+    }
     await ctx.runMutation(internal.compliance.saveComplianceChunks, {
       complianceId: args.complianceId,
       chunks: processed,
     })
 
-    return { status: "success", chunksProcessed: chunks.length }
+    return { status: "success", modulesCreated: processed.length }
   },
 })
 
