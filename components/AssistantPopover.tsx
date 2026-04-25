@@ -55,14 +55,14 @@ export function AssistantPopover() {
     <>
       <Button
         ref={triggerRef}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 px-4 py-3 inline-flex items-center gap-2 shadow-lg"
+        onClick={() => setIsOpen(!isOpen)}
+        size="icon"
+        className="fixed bottom-10 right-6 z-40 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg size-12"
         aria-label="Open training assistant"
         aria-expanded={isOpen}
         aria-controls="assistant-panel"
       >
-        <MessageCircle className="size-4" aria-hidden="true" />
-        <span>Ask assistant</span>
+        <MessageCircle className="size-6" aria-hidden="true" />
       </Button>
 
       {isOpen && (
@@ -71,10 +71,11 @@ export function AssistantPopover() {
           role="dialog"
           aria-modal="false"
           aria-labelledby="assistant-heading"
-          className="fixed bottom-6 right-6 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg"
+          className="fixed right-6 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg"
           style={{
             width: "min(380px, calc(100vw - 2rem))",
             height: "min(520px, calc(100vh - 6rem))",
+            bottom: "calc(2.5rem + 3rem + 0.5rem)",
           }}
         >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
