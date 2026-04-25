@@ -1,0 +1,25 @@
+{
+  "name": "compliance-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCP server exposing company compliance policies to AI coding agents (Claude Code, Cursor, Windsurf).",
+  "bin": {
+    "compliance-mcp": "./dist/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "inspect": "npx @modelcontextprotocol/inspector tsx src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
