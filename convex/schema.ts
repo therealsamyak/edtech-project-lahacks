@@ -23,9 +23,11 @@ export default defineSchema({
   complianceDocs: defineTable({
     complianceId: v.string(),
     text: v.string(),
+    module: v.string(),
     embedding: v.array(v.float64()),
   })
     .index("by_compliance_id", ["complianceId"])
+    .index("by_module", ["complianceId", "module"])
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
       dimensions: 1536,

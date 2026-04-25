@@ -13,6 +13,7 @@ import type * as auth from "../auth.js";
 import type * as compliance from "../compliance.js";
 import type * as http from "../http.js";
 import type * as ingest from "../ingest.js";
+import type * as quiz from "../quiz.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   compliance: typeof compliance;
   http: typeof http;
   ingest: typeof ingest;
+  quiz: typeof quiz;
 }>;
 
 /**
