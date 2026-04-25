@@ -264,6 +264,33 @@ export class ComplianceAIService {
       model: typeof json.model === "string" ? json.model : request.model,
     }
   }
+
+  async generateEmbedding(text: string): Promise<number[]> {
+    const trimmedText = text.trim()
+    if (!trimmedText) throw new Error("Text cannot be empty for embedding.")
+
+    const response = await fetch("https://openrouter.ai/api/v1/embeddings", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": this.httpReferer ?? "",
+        "X-OpenRouter-Title": this.appTitle ?? "",
+      },
+      body: JSON.stringify({
+        model: "openai/text-embedding-3-small",
+        input: trimmedText,
+      }),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(`Embedding failed: ${errorText}`)
+    }
+
+    const json = await response.json()
+    return json.data[0].embedding
+  }
 }
 
 function isResponseValidationError(error: unknown): boolean {
