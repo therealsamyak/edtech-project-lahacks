@@ -20,7 +20,6 @@ Options:
 
 Environment Variables:
   OPENROUTER_API_KEY    Required API key for OpenRouter
-  OPENROUTER_MODEL      Optional model override (default: openrouter/free)
   OPENROUTER_HTTP_REFERER Optional referer header
   OPENROUTER_APP_TITLE  Optional OpenRouter app title header
 

@@ -1,4 +1,3 @@
-import { HTTPClient } from "@openrouter/sdk"
 import { describe, expect, it, vi } from "vitest"
 import { ComplianceAIService } from "./ai"
 
@@ -8,9 +7,32 @@ interface CapturedRequest {
   url: string
 }
 
+function contentToText(content: unknown): string {
+  if (typeof content === "string") return content
+
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => {
+        if (typeof part === "string") return part
+        if (
+          typeof part === "object" &&
+          part !== null &&
+          "text" in part &&
+          typeof (part as { text?: unknown }).text === "string"
+        ) {
+          return (part as { text: string }).text
+        }
+        return ""
+      })
+      .join("\n")
+  }
+
+  return ""
+}
+
 function createMockHttpClient(responseBody: unknown): {
-  httpClient: HTTPClient
-  fetcher: ReturnType<typeof vi.fn>
+  fetcher: typeof fetch
+  fetchSpy: ReturnType<typeof vi.fn>
   captured: CapturedRequest[]
 } {
   const captured: CapturedRequest[] = []
@@ -35,23 +57,20 @@ function createMockHttpClient(responseBody: unknown): {
   })
 
   return {
-    httpClient: new HTTPClient({ fetcher }),
-    fetcher,
+    fetcher: fetcher as unknown as typeof fetch,
+    fetchSpy: fetcher,
     captured,
   }
 }
 
 describe("ComplianceAIService", () => {
   it("constructs compliance prompts with context and query", async () => {
-    const { httpClient, captured } = createMockHttpClient({
+    const { fetcher, captured } = createMockHttpClient({
       id: "chatcmpl-1",
-      object: "chat.completion",
       created: 1710000000,
       model: "openrouter/free",
-      system_fingerprint: null,
       choices: [
         {
-          index: 0,
           finish_reason: "stop",
           message: {
             role: "assistant",
@@ -68,8 +87,8 @@ describe("ComplianceAIService", () => {
 
     const service = new ComplianceAIService({
       apiKey: "test-key",
-      model: "openrouter/free",
-      httpClient,
+      complianceModels: ["openrouter/free"],
+      fetch: fetcher,
     })
 
     const result = await service.generateComplianceAction(
@@ -81,32 +100,29 @@ describe("ComplianceAIService", () => {
     expect(captured).toHaveLength(1)
 
     const requestBody = captured[0].body as {
-      messages?: Array<{ role: string; content: string }>
+      messages?: Array<{ role: string; content: unknown }>
     }
 
     expect(captured[0].method).toBe("POST")
     expect(captured[0].url).toContain("/chat/completions")
     expect(requestBody.messages).toBeDefined()
     expect(requestBody.messages?.[0].role).toBe("system")
-    expect(requestBody.messages?.[0].content).toContain("Compliance Officer")
-    expect(requestBody.messages?.[1].content).toContain(
+    expect(contentToText(requestBody.messages?.[0].content)).toContain("Compliance Officer")
+    expect(contentToText(requestBody.messages?.[1].content)).toContain(
       "Employees must report incidents within 24 hours.",
     )
-    expect(requestBody.messages?.[1].content).toContain(
+    expect(contentToText(requestBody.messages?.[1].content)).toContain(
       "What should I do if someone shares customer data externally?",
     )
   })
 
   it("requests quiz generation in json mode and returns parse-ready items", async () => {
-    const { httpClient, captured } = createMockHttpClient({
+    const { fetcher, captured } = createMockHttpClient({
       id: "chatcmpl-2",
-      object: "chat.completion",
       created: 1710000000,
       model: "openrouter/free",
-      system_fingerprint: null,
       choices: [
         {
-          index: 0,
           finish_reason: "stop",
           message: {
             role: "assistant",
@@ -131,8 +147,8 @@ describe("ComplianceAIService", () => {
 
     const service = new ComplianceAIService({
       apiKey: "test-key",
-      model: "openrouter/free",
-      httpClient,
+      quizModels: ["openrouter/free"],
+      fetch: fetcher,
     })
 
     const quiz = await service.generateQuiz("Incident reporting is mandatory within 24 hours.")
@@ -141,11 +157,11 @@ describe("ComplianceAIService", () => {
     expect(quiz[0].correctAnswer).toBe("Within 24 hours")
 
     const requestBody = captured[0].body as {
-      response_format?: { type: string }
-      responseFormat?: { type: string }
+      temperature?: number
+      messages?: Array<{ role: string; content: unknown }>
     }
-    const responseFormat = requestBody.response_format ?? requestBody.responseFormat
 
-    expect(responseFormat?.type).toBe("json_object")
+    expect(requestBody.temperature).toBe(0)
+    expect(contentToText(requestBody.messages?.[0].content)).toContain("Return valid JSON only")
   })
 })
