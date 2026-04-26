@@ -71,7 +71,7 @@ export default function TrainingAccessPage() {
   useEffect(() => {
     if (allDocuments && allDocuments.length > 0) {
       console.log("\n========== ALL DOCUMENTS ==========")
-      allDocuments.forEach((c) => {
+      allDocuments.forEach((c: { name: string; uuid: string; passphrase: string }) => {
         console.log(`Document: ${c.name}`)
         console.log(`  UUID:       ${c.uuid}`)
         console.log(`  Passphrase: ${c.passphrase}`)
@@ -202,7 +202,7 @@ export default function TrainingAccessPage() {
                 <Combobox
                   items={allDocuments ?? []}
                   onValueChange={(v) => {
-                    const selected = allDocuments?.find((c) => c.name === v)
+                    const selected = allDocuments?.find((c: { name: string }) => c.name === v)
                     if (selected) {
                       setDocument(selected.name)
                       setUuid(selected.uuid)
