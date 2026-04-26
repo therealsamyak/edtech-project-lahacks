@@ -45,12 +45,15 @@ export default defineSchema({
     .index("by_slug", ["slug"]),
   quizResults: defineTable({
     userId: v.id("users"),
-    moduleId: v.string(),
+    complianceDocumentId: v.string(),
+    moduleTitle: v.string(),
     score: v.number(),
     totalQuestions: v.number(),
     passed: v.boolean(),
     completedAt: v.number(),
-  }),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_userId_documentId", ["userId", "complianceDocumentId"]),
   userDocuments: defineTable({
     userId: v.id("users"),
     complianceDocumentId: v.id("complianceDocuments"),

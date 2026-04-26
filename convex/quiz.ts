@@ -46,12 +46,15 @@ export const submitQuiz = mutation({
       if (user) {
         await ctx.db.insert("quizResults", {
           userId: user._id,
-          moduleId: args.moduleTitle,
+          complianceDocumentId: args.complianceDocumentId,
+          moduleTitle: args.moduleTitle,
           score,
           totalQuestions,
           passed,
           completedAt: Date.now(),
         })
+      } else {
+        console.warn(`[quiz] No user found with email ${identity.email}. Quiz result not saved.`)
       }
     }
 

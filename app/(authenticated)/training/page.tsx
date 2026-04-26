@@ -109,21 +109,6 @@ function DocumentGroupCard({
           </button>
 
           <div className="flex items-center gap-1 ml-2">
-            <button
-              type="button"
-              onClick={onUpload}
-              disabled={isUploading}
-              className="p-1.5 rounded-md transition-colors"
-              style={{ color: "var(--muted)" }}
-              aria-label="Upload additional documents"
-              title="Upload additional documents"
-            >
-              {isUploading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-            </button>
             <AlertDialog>
               <AlertDialogTrigger
                 className="p-1.5 rounded-md transition-colors hover:bg-red-50"

@@ -54,11 +54,11 @@ export const ingestComplianceDoc = internalAction({
         chunks: processed,
       })
 
-      const module = await ai.generateModule(fullText.slice(0, 8000))
+      const modules = await ai.generateModules(fullText.slice(0, 8000))
 
       await ctx.runMutation(internal.compliance.saveModules, {
         complianceDocumentId: compliance.uuid,
-        modules: [module],
+        modules: modules,
       })
 
       await ctx.runMutation(internal.documents.updateDocumentStatus, {
@@ -68,7 +68,7 @@ export const ingestComplianceDoc = internalAction({
 
       return {
         status: "success",
-        moduleName: module.title,
+        moduleName: modules[0]?.title ?? "Unknown",
         characterCount: fullText.length,
       }
     } catch (e) {
