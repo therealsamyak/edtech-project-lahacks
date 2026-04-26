@@ -26,6 +26,7 @@ export interface ModuleItem {
   title: string
   description: string
   content: string
+  plainLanguageSummary?: string
   duration: string
   topics: string[]
   highlights: string[]
@@ -74,6 +75,7 @@ const MODULE_SYSTEM_PROMPT = [
   "Return valid JSON only with no markdown, prose, or code fences.",
   "Generate exactly 3 training modules from the provided document text, covering different aspects/sections.",
   "Each module must include: title, description, content (detailed summary), duration estimate, topics array, highlights array, quizQuestions array, and order.",
+  "Each module must include a `plainLanguageSummary` field — a 2-3 sentence plain-language explanation of the module content, written for a non-technical audience.",
   "Each quiz question must include: question (string), options (array of 4 strings), correctIndex (0-based integer indicating the correct option).",
   "Generate exactly 3 to 5 quiz questions per module.",
   "Do NOT include a correctAnswer string field — use correctIndex only.",
@@ -221,7 +223,7 @@ export class ComplianceAIService {
         truncated.trim(),
         "",
         "Return a JSON array with this exact shape for each module:",
-        '[{"title":"...","description":"...","content":"...","duration":"...","topics":["..."],"highlights":["..."],"quizQuestions":[{"question":"...","options":["A","B","C","D"],"correctIndex":0}],"order":0}]',
+        '[{"title":"...","description":"...","content":"...","plainLanguageSummary":"...","duration":"...","topics":["..."],"highlights":["..."],"quizQuestions":[{"question":"...","options":["A","B","C","D"],"correctIndex":0}],"order":0}]',
         "",
         "Rules:",
         "- Generate exactly 3 modules covering different aspects of the document.",
@@ -343,6 +345,7 @@ function parseSingleModule(payload: unknown, index: number): ModuleItem {
   const duration = raw.duration
   const topics = raw.topics
   const highlights = raw.highlights
+  const plainLanguageSummary = raw.plainLanguageSummary
   const quizQuestions = raw.quizQuestions
 
   if (typeof title !== "string" || title.trim().length === 0) {
@@ -374,6 +377,8 @@ function parseSingleModule(payload: unknown, index: number): ModuleItem {
     duration: duration.trim(),
     topics: topics.map((t) => String(t).trim()),
     highlights: highlights.map((h) => String(h).trim()),
+    plainLanguageSummary:
+      typeof plainLanguageSummary === "string" ? plainLanguageSummary.trim() : undefined,
     quizQuestions: quizQuestions.map(parseModuleQuizQuestion),
     order: index,
   }

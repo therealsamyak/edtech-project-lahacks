@@ -9,6 +9,7 @@ export const chat = action({
   args: {
     message: v.string(),
     complianceDocumentId: v.optional(v.string()),
+    systemContext: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
@@ -32,11 +33,17 @@ export const chat = action({
       })
 
       const context = chunks.join("\n\n")
-      const result = await ai.generateComplianceAction(context, args.message)
+      const userMessage = args.systemContext
+        ? `Module context:\n${args.systemContext}\n\nUser question:\n${args.message}`
+        : args.message
+      const result = await ai.generateComplianceAction(context, userMessage)
       return result.answer
     }
 
-    const result = await ai.generateComplianceAction("", args.message)
+    const userMessage = args.systemContext
+      ? `Module context:\n${args.systemContext}\n\nUser question:\n${args.message}`
+      : args.message
+    const result = await ai.generateComplianceAction("", userMessage)
     return result.answer
   },
 })

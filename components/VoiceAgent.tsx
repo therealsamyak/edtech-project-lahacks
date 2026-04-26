@@ -13,6 +13,7 @@ interface VoiceAgentProps {
    * reference it and the server tool can scope its lookup to that document.
    */
   complianceId?: string
+  moduleContext?: string
 }
 
 /**
@@ -26,19 +27,23 @@ interface VoiceAgentProps {
  * The agent itself (system prompt, voice, server tool) is configured once in
  * the ElevenLabs dashboard. See docs/voice-agent.md.
  */
-export function VoiceAgent({ agentId, complianceId }: VoiceAgentProps) {
+export function VoiceAgent({ agentId, complianceId, moduleContext }: VoiceAgentProps) {
   return (
     <ConversationProvider
       onConnect={() => console.info("[voice-agent] connected")}
       onDisconnect={() => console.info("[voice-agent] disconnected")}
       onError={(err) => console.error("[voice-agent] error:", err)}
     >
-      <VoiceAgentControls agentId={agentId} complianceId={complianceId} />
+      <VoiceAgentControls
+        agentId={agentId}
+        complianceId={complianceId}
+        moduleContext={moduleContext}
+      />
     </ConversationProvider>
   )
 }
 
-function VoiceAgentControls({ agentId, complianceId }: VoiceAgentProps) {
+function VoiceAgentControls({ agentId, complianceId, moduleContext }: VoiceAgentProps) {
   const conversation = useConversation()
   const { status, isSpeaking, startSession, endSession } = conversation
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +64,7 @@ function VoiceAgentControls({ agentId, complianceId }: VoiceAgentProps) {
         agentId,
         dynamicVariables: {
           compliance_id: complianceId ?? "general",
+          module_context: moduleContext ?? "",
         },
       })
     } catch (err) {
