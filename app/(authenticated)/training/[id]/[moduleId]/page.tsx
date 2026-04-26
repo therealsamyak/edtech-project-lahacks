@@ -2,13 +2,16 @@
 
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { useQuery } from "convex/react"
+import { useAction, useQuery } from "convex/react"
+import { useRef, useState } from "react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
   ChevronLeft,
   Volume2,
+  VolumeX,
+  Loader2,
   Play,
   BookOpen,
   ListChecks,
@@ -20,11 +23,54 @@ import {
 const visualTones = ["accent", "secondary", "positive"] as const
 type VisualTone = (typeof visualTones)[number]
 
+type AudioState = "idle" | "loading" | "playing" | "error"
+
 export default function ModuleContentPage() {
   const params = useParams<{ id: string; moduleId: string }>()
   const moduleData = useQuery(api.training.getModule, {
     moduleId: params.moduleId as any,
   })
+  const synthesize = useAction(api.voice.synthesize)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [audioState, setAudioState] = useState<AudioState>("idle")
+  const [audioError, setAudioError] = useState<string | null>(null)
+
+  const handleListen = async () => {
+    setAudioError(null)
+
+    // If already playing, stop and reset.
+    if (audioState === "playing") {
+      audioRef.current?.pause()
+      if (audioRef.current) audioRef.current.currentTime = 0
+      setAudioState("idle")
+      return
+    }
+
+    // If we already have audio cached, just play it.
+    if (audioUrl && audioRef.current) {
+      void audioRef.current.play()
+      setAudioState("playing")
+      return
+    }
+
+    // Otherwise generate fresh.
+    if (!moduleData) return
+    setAudioState("loading")
+    try {
+      const result = await synthesize({ text: moduleData.content })
+      const url = `data:${result.mimeType};base64,${result.base64}`
+      setAudioUrl(url)
+      // Wait one tick for the <audio src> to bind, then play.
+      requestAnimationFrame(() => {
+        void audioRef.current?.play()
+        setAudioState("playing")
+      })
+    } catch (err) {
+      setAudioState("error")
+      setAudioError(err instanceof Error ? err.message : "Could not generate audio.")
+    }
+  }
 
   if (moduleData === undefined) {
     return (
@@ -82,9 +128,26 @@ export default function ModuleContentPage() {
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <Button variant="outline" onClick={() => console.log("[STUB] Audio playback")}>
-            <Volume2 className="w-4 h-4" aria-hidden="true" />
-            <span>Listen to summary</span>
+          <Button
+            variant="outline"
+            onClick={handleListen}
+            disabled={audioState === "loading"}
+            aria-label={audioState === "playing" ? "Stop summary playback" : "Listen to summary"}
+          >
+            {audioState === "loading" ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            ) : audioState === "playing" ? (
+              <VolumeX className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <Volume2 className="w-4 h-4" aria-hidden="true" />
+            )}
+            <span>
+              {audioState === "loading"
+                ? "Generating…"
+                : audioState === "playing"
+                  ? "Stop"
+                  : "Listen to summary"}
+            </span>
           </Button>
           <Button
             render={<Link href={`/training/${params.id}/${params.moduleId}/quiz`} />}
@@ -94,6 +157,26 @@ export default function ModuleContentPage() {
             <span>Take the quiz</span>
           </Button>
         </div>
+
+        {audioError && (
+          <p role="alert" className="mt-2 text-xs" style={{ color: "var(--negative, #b91c1c)" }}>
+            {audioError}
+          </p>
+        )}
+
+        {audioUrl && (
+          // eslint-disable-next-line jsx-a11y/media-has-caption -- audio reads the visible page content; no separate caption track needed
+          <audio
+            ref={audioRef}
+            src={audioUrl}
+            onEnded={() => setAudioState("idle")}
+            onPause={() => {
+              if (audioState === "playing") setAudioState("idle")
+            }}
+            preload="auto"
+            hidden
+          />
+        )}
       </header>
 
       <figure className="card overflow-hidden mb-8">

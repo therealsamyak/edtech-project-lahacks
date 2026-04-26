@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated audio output from the voice spike script
+/scripts/output/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

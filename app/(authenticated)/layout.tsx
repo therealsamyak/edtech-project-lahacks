@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react"
 import { SignOutButton } from "@/components/SignOutButton"
 import { AuthGuard } from "@/components/AuthGuard"
 import TabBar from "@/components/TabBar"
+import { VoiceAgentPopover } from "@/components/VoiceAgentPopover"
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -42,6 +43,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
             <span>Privacy &middot; Terms &middot; Accessibility</span>
           </div>
         </footer>
+
+        <VoiceAgentPopover />
       </div>
     </AuthGuard>
   )

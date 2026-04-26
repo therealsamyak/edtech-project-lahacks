@@ -11,11 +11,14 @@
     "seed": "npx convex run seed:seed",
     "format": "oxfmt .",
     "check": "oxlint --fix . && oxfmt .",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install",
+    "voice:spike": "tsx scripts/eleven-spike.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@convex-dev/auth": "^0.0.91",
+    "@elevenlabs/elevenlabs-js": "^2.0.0",
+    "@elevenlabs/react": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -40,6 +43,7 @@
     "oxfmt": "^0.46.0",
     "oxlint": "^1.61.0",
     "tailwindcss": "^4.2.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
