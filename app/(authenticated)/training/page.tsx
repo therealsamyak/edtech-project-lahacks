@@ -44,7 +44,6 @@ import {
   ArrowRight,
   Building2,
   Plus,
-  Upload,
   Loader2,
   Trash2,
   AlertCircle,
@@ -54,9 +53,9 @@ function DocumentGroupCard({
   group,
   isExpanded,
   onToggle,
-  onUpload,
+  onUpload: _onUpload,
   onRemove,
-  isUploading,
+  isUploading: _isUploading,
 }: {
   group: { documentUuid: string; documentName: string; modules: any[] }
   isExpanded: boolean
@@ -234,7 +233,6 @@ export default function TrainingAccessPage() {
   const uploadInputRef = useRef<HTMLInputElement>(null)
   const pendingDocumentUuid = useRef<string | null>(null)
 
-  const router = useRouter()
   const verifyAccess = useMutation(api.training.verifyAccess)
   const removeUserDocument = useMutation(api.training.removeUserDocument)
   const userDocuments = useQuery(api.training.getUserDocumentsWithModules)
