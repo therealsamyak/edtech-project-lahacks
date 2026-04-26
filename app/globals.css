@@ -146,6 +146,7 @@
 
   html {
     font-size: var(--font-size);
+    overflow-y: scroll;
   }
 
   body {
