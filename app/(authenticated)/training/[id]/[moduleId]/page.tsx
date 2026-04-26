@@ -93,6 +93,7 @@ export default function ModuleContentPage() {
   const visuals = moduleData.topics.slice(0, 3).map((t, i) => ({
     caption: t,
     tone: visualTones[i % visualTones.length] as VisualTone,
+    imageUrl: moduleData.topicImageUrls?.[i] ?? null,
   }))
 
   return (
@@ -181,9 +182,21 @@ export default function ModuleContentPage() {
         <div
           className="aspect-[16/7] flex items-center justify-center"
           style={{ background: "var(--accent-soft)" }}
-          aria-hidden="true"
         >
-          <ImageIcon className="w-10 h-10" style={{ color: "var(--accent)" }} />
+          {moduleData.overviewImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- remote pollinations.ai URLs aren't configured for next/image
+            <img
+              src={moduleData.overviewImageUrl}
+              alt={`${moduleData.title} overview`}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <ImageIcon
+              className="w-10 h-10"
+              style={{ color: "var(--accent)" }}
+              aria-hidden="true"
+            />
+          )}
         </div>
         <figcaption
           className="px-5 py-3 border-t flex items-center justify-between text-sm"
@@ -192,7 +205,9 @@ export default function ModuleContentPage() {
           <span style={{ color: "var(--ink-soft)" }}>
             Module overview &middot; {moduleData.title}
           </span>
-          <span className="eyebrow">Generated visual</span>
+          <span className="eyebrow">
+            {moduleData.overviewImageUrl ? "Generated visual" : "Generating…"}
+          </span>
         </figcaption>
       </figure>
 
@@ -248,7 +263,16 @@ export default function ModuleContentPage() {
                   className="aspect-[4/3] flex items-center justify-center"
                   style={{ background: `var(--${v.tone}-soft)` }}
                 >
-                  <ImageIcon className="w-7 h-7" style={{ color: `var(--${v.tone})` }} />
+                  {v.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- remote pollinations.ai URLs aren't configured for next/image
+                    <img src={v.imageUrl} alt={v.caption} className="w-full h-full object-cover" />
+                  ) : (
+                    <ImageIcon
+                      className="w-7 h-7"
+                      style={{ color: `var(--${v.tone})` }}
+                      aria-hidden="true"
+                    />
+                  )}
                 </div>
                 <div className="px-4 py-3 text-sm border-t" style={{ borderColor: "var(--line)" }}>
                   <div style={{ color: "var(--ink)", fontWeight: 500 }}>{v.caption}</div>

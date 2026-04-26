@@ -37,6 +37,8 @@ export default defineSchema({
             }),
           ),
           order: v.number(),
+          overviewImageStorageId: v.optional(v.id("_storage")),
+          topicImageStorageIds: v.optional(v.array(v.id("_storage"))),
         }),
       ),
     ),

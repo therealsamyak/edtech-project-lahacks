@@ -1,6 +1,7 @@
-import { query, mutation } from "./_generated/server"
+import { query, mutation, internalMutation } from "./_generated/server"
 import { v } from "convex/values"
 import { auth } from "./auth"
+import { internal } from "./_generated/api"
 
 export const getModule = query({
   args: {
@@ -15,7 +16,43 @@ export const getModule = query({
 
     if (!doc || !doc.modules) return null
 
-    return doc.modules.find((m) => m.title === args.moduleTitle) ?? null
+    const found = doc.modules.find((m) => m.title === args.moduleTitle) ?? null
+    if (!found) return null
+
+    const overviewImageUrl = found.overviewImageStorageId
+      ? await ctx.storage.getUrl(found.overviewImageStorageId)
+      : null
+
+    const topicImageUrls = await Promise.all(
+      (found.topicImageStorageIds ?? []).map((id) => (id ? ctx.storage.getUrl(id) : null)),
+    )
+
+    return { ...found, overviewImageUrl, topicImageUrls }
+  },
+})
+
+export const backfillModuleVisualsForCompliance = internalMutation({
+  args: { complianceDocumentUuid: v.string() },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentUuid))
+      .unique()
+    if (!doc || !doc.modules) return
+
+    const pending = doc.modules.filter((m) => {
+      const wantedTopics = Math.min(m.topics.length, 3)
+      const haveTopics = (m.topicImageStorageIds ?? []).filter(Boolean).length
+      return !m.overviewImageStorageId || haveTopics < wantedTopics
+    })
+    if (pending.length === 0) return
+
+    await ctx.scheduler.runAfter(0, internal.moduleVisuals.processModuleQueue, {
+      items: pending.map((m) => ({
+        complianceDocumentUuid: args.complianceDocumentUuid,
+        moduleTitle: m.title,
+      })),
+    })
   },
 })
 

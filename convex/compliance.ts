@@ -119,6 +119,80 @@ export const saveModules = internalMutation({
   },
 })
 
+export const setModuleOverviewImage = internalMutation({
+  args: {
+    complianceDocumentUuid: v.string(),
+    moduleTitle: v.string(),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentUuid))
+      .unique()
+    if (!doc || !doc.modules) return
+    const next = doc.modules.map((m) =>
+      m.title === args.moduleTitle ? { ...m, overviewImageStorageId: args.storageId } : m,
+    )
+    await ctx.db.patch(doc._id, { modules: next })
+  },
+})
+
+export const setModuleTopicImageAt = internalMutation({
+  args: {
+    complianceDocumentUuid: v.string(),
+    moduleTitle: v.string(),
+    index: v.number(),
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentUuid))
+      .unique()
+    if (!doc || !doc.modules) return
+    const next = doc.modules.map((m) => {
+      if (m.title !== args.moduleTitle) return m
+      const ids = [...(m.topicImageStorageIds ?? [])]
+      while (ids.length <= args.index) ids.push(null as never)
+      ids[args.index] = args.storageId
+      return { ...m, topicImageStorageIds: ids }
+    })
+    await ctx.db.patch(doc._id, { modules: next })
+  },
+})
+
+export const clearModuleVisuals = internalMutation({
+  args: { complianceDocumentUuid: v.string() },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentUuid))
+      .unique()
+    if (!doc || !doc.modules) return
+    const next = doc.modules.map((m) => {
+      const { overviewImageStorageId: _o, topicImageStorageIds: _t, ...rest } = m
+      return rest
+    })
+    await ctx.db.patch(doc._id, { modules: next })
+  },
+})
+
+export const getModuleForVisuals = internalQuery({
+  args: {
+    complianceDocumentUuid: v.string(),
+    moduleTitle: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentUuid))
+      .unique()
+    if (!doc || !doc.modules) return null
+    return doc.modules.find((m) => m.title === args.moduleTitle) ?? null
+  },
+})
+
 export const getChunksByIds = internalQuery({
   args: { ids: v.array(v.id("documentChunks")) },
   handler: async (ctx, args) => {

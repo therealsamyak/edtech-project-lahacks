@@ -61,6 +61,13 @@ export const ingestComplianceDoc = internalAction({
         modules: modules,
       })
 
+      await ctx.scheduler.runAfter(0, internal.moduleVisuals.processModuleQueue, {
+        items: modules.map((m) => ({
+          complianceDocumentUuid: compliance.uuid,
+          moduleTitle: m.title,
+        })),
+      })
+
       await ctx.runMutation(internal.documents.updateDocumentStatus, {
         storageId: args.storageId,
         status: "completed",

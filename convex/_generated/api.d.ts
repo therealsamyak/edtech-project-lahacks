@@ -15,6 +15,7 @@ import type * as debug from "../debug.js";
 import type * as documents from "../documents.js";
 import type * as http from "../http.js";
 import type * as ingest from "../ingest.js";
+import type * as moduleVisuals from "../moduleVisuals.js";
 import type * as quiz from "../quiz.js";
 import type * as seed from "../seed.js";
 import type * as training from "../training.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   documents: typeof documents;
   http: typeof http;
   ingest: typeof ingest;
+  moduleVisuals: typeof moduleVisuals;
   quiz: typeof quiz;
   seed: typeof seed;
   training: typeof training;
