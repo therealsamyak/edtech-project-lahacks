@@ -55,13 +55,12 @@ function VoiceAgentControls({ agentId, complianceId }: VoiceAgentProps) {
       return
     }
     try {
-      const sessionArgs: { agentId: string; dynamicVariables?: Record<string, string> } = {
+      await startSession({
         agentId,
-      }
-      if (complianceId) {
-        sessionArgs.dynamicVariables = { compliance_id: complianceId }
-      }
-      await startSession(sessionArgs)
+        dynamicVariables: {
+          compliance_id: complianceId ?? "general",
+        },
+      })
     } catch (err) {
       setError(`Could not start the agent: ${err instanceof Error ? err.message : String(err)}`)
     }
