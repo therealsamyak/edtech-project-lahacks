@@ -8,6 +8,7 @@ import { Bot, Send, X, MessageCircle, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { VoiceAgent } from "@/components/VoiceAgent"
+import { LoaderInline } from "@dot-loaders/react"
 
 type Message = { role: "user" | "assistant"; content: string }
 
@@ -23,6 +24,11 @@ export function FloatingButtonGroup() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const chat = useAction(api.assistant.chat)
 
+  const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
+  const params = useParams<{ id?: string; moduleId?: string }>()
+  const complianceId = typeof params?.id === "string" ? params.id : undefined
+  const moduleId = typeof params?.moduleId === "string" ? params.moduleId : undefined
+
   const moduleData = useQuery(
     api.training.getModule,
     complianceId && moduleId
@@ -36,13 +42,6 @@ export function FloatingButtonGroup() {
   const systemContext = moduleData
     ? [moduleData.plainLanguageSummary, ...(moduleData.highlights ?? [])].filter(Boolean).join("\n")
     : undefined
-
-  const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
-  const params = useParams<{ id?: string; moduleId?: string }>()
-  const complianceId = typeof params?.id === "string" ? params.id : undefined
-  const moduleId = typeof params?.moduleId === "string" ? params.moduleId : undefined
-
-  if (!moduleId) return null
 
   useEffect(() => {
     if (!chatOpen && !voiceOpen) return
@@ -67,7 +66,10 @@ export function FloatingButtonGroup() {
   }, [messages])
 
   const openChat = () => {
-    setChatOpen((prev) => !prev)
+    setChatOpen((prev) => {
+      if (prev) setMessages([])
+      return !prev
+    })
     setVoiceOpen(false)
   }
   const openVoice = () => {
@@ -95,6 +97,8 @@ export function FloatingButtonGroup() {
       setIsLoading(false)
     }
   }
+
+  if (!moduleId) return null
 
   return (
     <>
@@ -210,6 +214,7 @@ export function FloatingButtonGroup() {
               size="icon-xs"
               onClick={() => {
                 setChatOpen(false)
+                setMessages([])
                 chatTriggerRef.current?.focus()
               }}
               aria-label="Close assistant"
@@ -258,7 +263,11 @@ export function FloatingButtonGroup() {
                       border: "1px solid var(--line)",
                     }}
                   >
-                    …
+                    <LoaderInline
+                      loader="pulse"
+                      renderer="svg-grid"
+                      style={{ color: "var(--ink-soft)" }}
+                    />
                   </div>
                 )}
               </div>

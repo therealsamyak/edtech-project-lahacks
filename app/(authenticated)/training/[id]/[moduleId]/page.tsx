@@ -217,6 +217,19 @@ export default function ModuleContentPage() {
         </figcaption>
       </figure>
 
+      {moduleData.plainLanguageSummary && (
+        <Card className="p-0 mb-8" size="default">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-1.5 eyebrow mb-3">
+              <span>AI Summary</span>
+            </div>
+            <p style={{ color: "var(--ink)", fontSize: "1rem" }}>
+              {moduleData.plainLanguageSummary}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
         <div className="lg:col-span-2">
           <Card className="p-0" size="default">
@@ -258,19 +271,6 @@ export default function ModuleContentPage() {
           </Card>
         </aside>
       </div>
-
-      {moduleData.plainLanguageSummary && (
-        <Card className="p-0 mb-8" size="default">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-1.5 eyebrow mb-3">
-              <span>AI Summary</span>
-            </div>
-            <p style={{ color: "var(--ink)", fontSize: "1rem" }}>
-              {moduleData.plainLanguageSummary}
-            </p>
-          </CardContent>
-        </Card>
-      )}
 
       {visuals.length > 0 && (
         <section className="mb-8">

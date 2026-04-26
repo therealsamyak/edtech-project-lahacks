@@ -54,7 +54,7 @@ export const ingestComplianceDoc = internalAction({
         chunks: processed,
       })
 
-      const modules = await ai.generateModules(fullText.slice(0, 8000))
+      const modules = await ai.generateModules(fullText.slice(0, 30000))
 
       await ctx.runMutation(internal.compliance.saveModules, {
         complianceDocumentId: compliance.uuid,

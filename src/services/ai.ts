@@ -61,12 +61,15 @@ const COMPLIANCE_SYSTEM_PROMPT = [
   "Use only the provided context to answer.",
   "If the context is missing required facts, say what is missing instead of guessing.",
   "Give practical, policy-safe action steps and note assumptions.",
+  "Respond in under 3 sentences unless the user explicitly asks for more detail.",
 ].join(" ")
 
 const QUIZ_SYSTEM_PROMPT = [
   "You are an instructional designer for compliance training.",
   "Return valid JSON only with no markdown, prose, or code fences.",
   "Generate multiple-choice quiz items grounded in the provided section.",
+  "Questions must test SPECIFIC facts from the text: exact regulations, numbers, thresholds, deadlines, required actions, prohibited actions, responsible parties, and procedural steps.",
+  "Do NOT ask vague or generic questions — every question must be answerable only by someone who carefully read the detailed content.",
   "Each item must include: question, options (array of strings), correctAnswer.",
 ].join(" ")
 
@@ -74,10 +77,18 @@ const MODULE_SYSTEM_PROMPT = [
   "You are a senior compliance training module designer.",
   "Return valid JSON only with no markdown, prose, or code fences.",
   "Generate exactly 3 training modules from the provided document text, covering different aspects/sections.",
-  "Each module must include: title, description, content (detailed summary), duration estimate, topics array, highlights array, quizQuestions array, and order.",
+  "Each module must include: title, description, content, plainLanguageSummary, duration estimate, topics array, highlights array, quizQuestions array, and order.",
+  "",
+  "CRITICAL — `content` field requirements:",
+  "The `content` field must be an EXTREMELY thorough, comprehensive explanation of all material relevant to this module from the source document.",
+  "It must NOT be a brief summary. It must preserve ALL specifics from the source: exact regulations, section numbers, defined terms, procedural steps, quantitative thresholds, deadlines, exceptions, scope limitations, defined terms, required actions, prohibited actions, penalties, reporting requirements, responsible parties, and any conditional logic (if X then Y).",
+  "Target at least 1500-2500 characters per module's content field. Use multiple paragraphs separated by newlines.",
+  "Every piece of information from the source text that falls under this module's topic MUST appear in the content field. Do not omit details for brevity — completeness is the priority.",
+  "",
   "Each module must include a `plainLanguageSummary` field — a 2-3 sentence plain-language explanation of the module content, written for a non-technical audience.",
   "Each quiz question must include: question (string), options (array of 4 strings), correctIndex (0-based integer indicating the correct option).",
-  "Generate exactly 3 to 5 quiz questions per module.",
+  "Generate exactly 5 quiz questions per module.",
+  "Quiz questions MUST be derived from the detailed content — they should test specific facts, requirements, thresholds, procedures, and details found in the source text, not generic high-level concepts.",
   "Do NOT include a correctAnswer string field — use correctIndex only.",
 ].join(" ")
 
@@ -212,7 +223,7 @@ export class ComplianceAIService {
   }
 
   async generateModules(fullText: string): Promise<ModuleItem[]> {
-    // Note: text truncated to 8000 chars due to model context limits
+    // Note: text truncated to 30000 chars to allow comprehensive content extraction
     const truncated = fullText.slice(0, 8000)
 
     const response = await this.generateTextWithFailover({
@@ -227,10 +238,12 @@ export class ComplianceAIService {
         "",
         "Rules:",
         "- Generate exactly 3 modules covering different aspects of the document.",
-        "- Each module should have 3 to 5 quiz questions.",
+        "- Each module's `content` field MUST be extremely detailed and comprehensive — at least 1500-2500 characters. Include ALL specifics: regulations, section numbers, defined terms, procedural steps, thresholds, deadlines, exceptions, penalties, scope, responsible parties, required actions, prohibited actions, and conditional logic from the source. Do NOT summarize or abbreviate. Completeness over brevity.",
+        "- Each module should have exactly 5 quiz questions.",
         "- Each question must have exactly 4 options.",
         "- `correctIndex` is a 0-based integer indicating the correct option.",
         "- Do NOT include a `correctAnswer` string field.",
+        "- Quiz questions must test SPECIFIC details from the document (numbers, names, thresholds, procedures) — not vague high-level concepts.",
       ].join("\n"),
       temperature: 0,
     })

@@ -45,10 +45,10 @@ import {
   ArrowRight,
   Building2,
   Plus,
-  Loader2,
   Trash2,
   AlertCircle,
 } from "lucide-react"
+import { LoaderInline } from "@dot-loaders/react"
 
 function DocumentGroupCard({
   group,
@@ -148,10 +148,11 @@ function DocumentGroupCard({
           className="border-t px-5 py-6 flex items-center gap-3"
           style={{ borderColor: "var(--line)" }}
         >
-          <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--muted)" }} />
-          <span className="text-sm" style={{ color: "var(--muted)" }}>
-            Processing document…
-          </span>
+          <LoaderInline loader="pulse" renderer="svg-grid" style={{ color: "var(--muted)" }}>
+            <span className="text-sm" style={{ color: "var(--muted)" }}>
+              Processing document…
+            </span>
+          </LoaderInline>
         </div>
       )}
 
