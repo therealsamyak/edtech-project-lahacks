@@ -13,8 +13,8 @@ import { Check, ChevronLeft, ChevronRight, Award } from "lucide-react"
 export default function QuizPage() {
   const params = useParams<{ id: string; moduleId: string }>()
   const moduleData = useQuery(api.training.getModule, {
-    complianceDocumentId: params.id,
-    moduleTitle: params.moduleId,
+    complianceDocumentId: decodeURIComponent(params.id),
+    moduleTitle: decodeURIComponent(params.moduleId),
   })
   const submitQuiz = useMutation(api.quiz.submitQuiz)
 

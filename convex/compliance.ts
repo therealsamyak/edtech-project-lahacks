@@ -80,6 +80,45 @@ export const saveComplianceChunks = internalMutation({
   },
 })
 
+export const saveModules = internalMutation({
+  args: {
+    complianceDocumentId: v.string(),
+    modules: v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+        content: v.string(),
+        duration: v.string(),
+        topics: v.array(v.string()),
+        highlights: v.array(v.string()),
+        quizQuestions: v.array(
+          v.object({
+            question: v.string(),
+            options: v.array(v.string()),
+            correctIndex: v.number(),
+          }),
+        ),
+        order: v.number(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentId))
+      .unique()
+
+    if (!doc) throw new Error(`Compliance document not found: ${args.complianceDocumentId}`)
+
+    const existing = doc.modules ?? []
+    const startOrder = existing.length > 0 ? Math.max(...existing.map((m) => m.order)) + 1 : 0
+
+    const withOrder = args.modules.map((m, i) => ({ ...m, order: startOrder + i }))
+
+    await ctx.db.patch(doc._id, { modules: [...existing, ...withOrder] })
+  },
+})
+
 export const getChunksByIds = internalQuery({
   args: { ids: v.array(v.id("documentChunks")) },
   handler: async (ctx, args) => {

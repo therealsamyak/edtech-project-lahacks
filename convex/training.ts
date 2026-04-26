@@ -138,6 +138,29 @@ export const removeUserDocument = mutation({
   },
 })
 
+export const getDocumentProcessingStatus = query({
+  args: { documentUuid: v.string() },
+  handler: async (ctx, args) => {
+    const compliance = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
+      .unique()
+
+    if (!compliance) return null
+
+    const docs = await ctx.db
+      .query("documents")
+      .withIndex("by_complianceDocumentId", (q) => q.eq("complianceDocumentId", compliance._id))
+      .collect()
+
+    if (docs.length === 0) return null
+
+    if (docs.some((d) => d.processingStatus === "pending")) return { status: "pending" }
+    if (docs.some((d) => d.processingStatus === "error")) return { status: "error" }
+    return { status: "completed" }
+  },
+})
+
 export const getDocumentByUuid = query({
   args: { uuid: v.string() },
   handler: async (ctx, args) => {

@@ -47,7 +47,195 @@ import {
   Upload,
   Loader2,
   Trash2,
+  AlertCircle,
 } from "lucide-react"
+
+function DocumentGroupCard({
+  group,
+  isExpanded,
+  onToggle,
+  onUpload,
+  onRemove,
+  isUploading,
+}: {
+  group: { documentUuid: string; documentName: string; modules: any[] }
+  isExpanded: boolean
+  onToggle: () => void
+  onUpload: () => void
+  onRemove: () => void
+  isUploading: boolean
+}) {
+  const router = useRouter()
+  const processingStatus = useQuery(api.training.getDocumentProcessingStatus, {
+    documentUuid: group.documentUuid,
+  })
+
+  const status = processingStatus?.status ?? null
+  const isProcessing = status === "pending"
+  const hasError = status === "error"
+
+  return (
+    <Card key={group.documentUuid} className="elev p-0" size="default">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onToggle}
+            className="flex items-center gap-4 text-left flex-1 min-w-0"
+          >
+            <div
+              className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+            >
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 eyebrow mb-0.5">
+                <span>Organization</span>
+                <span aria-hidden="true">·</span>
+                <span>{group.modules.length} modules</span>
+              </div>
+              <h2
+                className="font-display m-0"
+                style={{
+                  fontSize: "1.05rem",
+                  fontWeight: 500,
+                  lineHeight: 1.25,
+                }}
+              >
+                {group.documentName}
+              </h2>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              type="button"
+              onClick={onUpload}
+              disabled={isUploading}
+              className="p-1.5 rounded-md transition-colors"
+              style={{ color: "var(--muted)" }}
+              aria-label="Upload additional documents"
+              title="Upload additional documents"
+            >
+              {isUploading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+            </button>
+            <AlertDialog>
+              <AlertDialogTrigger
+                className="p-1.5 rounded-md transition-colors hover:bg-red-50"
+                style={{ color: "var(--destructive)" }}
+                aria-label="Remove document"
+                title="Remove document"
+              >
+                <Trash2 className="w-4 h-4" />
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Remove &ldquo;{group.documentName}&rdquo;?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will remove the document from your training hub. You can always add it back
+                    later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onClick={onRemove}>
+                    Remove
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            {isExpanded ? (
+              <ChevronUp className="w-5 h-5 shrink-0" style={{ color: "var(--muted)" }} />
+            ) : (
+              <ChevronDown className="w-5 h-5 shrink-0" style={{ color: "var(--muted)" }} />
+            )}
+          </div>
+        </div>
+      </CardContent>
+
+      {isExpanded && isProcessing && (
+        <div
+          className="border-t px-5 py-6 flex items-center gap-3"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <Loader2 className="w-4 h-4 animate-spin" style={{ color: "var(--muted)" }} />
+          <span className="text-sm" style={{ color: "var(--muted)" }}>
+            Processing document…
+          </span>
+        </div>
+      )}
+
+      {isExpanded && hasError && (
+        <div
+          className="border-t px-5 py-6 flex items-center gap-3"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <AlertCircle className="w-4 h-4" style={{ color: "var(--destructive)" }} />
+          <span className="text-sm" style={{ color: "var(--destructive)" }}>
+            Processing failed. Try uploading again.
+          </span>
+        </div>
+      )}
+
+      {isExpanded && !isProcessing && !hasError && group.modules.length > 0 && (
+        <div className="border-t" style={{ borderColor: "var(--line)" }}>
+          <ol className="divide-y" style={{ borderColor: "var(--line)" }}>
+            {group.modules.map((module: any, idx: number) => (
+              <li key={module.title ?? idx}>
+                <div className="px-5 py-4 flex items-center gap-5">
+                  <div
+                    className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
+                    style={{ background: "var(--paper-deep)", color: "var(--ink-soft)" }}
+                  >
+                    <span
+                      className="text-xs"
+                      style={{ fontFamily: "var(--font-mono)", fontWeight: 500 }}
+                    >
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 eyebrow mb-0.5">
+                      <span>{module.topics?.[0]}</span>
+                      <span aria-hidden="true">·</span>
+                      <Clock className="w-3 h-3" />
+                      <span>{module.duration}</span>
+                    </div>
+                    <h3
+                      className="font-display m-0"
+                      style={{ fontSize: "0.95rem", fontWeight: 500, lineHeight: 1.3 }}
+                    >
+                      {module.title}
+                    </h3>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      router.push(
+                        `/training/${group.documentUuid}/${encodeURIComponent(module.title)}`,
+                      )
+                    }
+                  >
+                    <span>Open</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </Card>
+  )
+}
 
 export default function TrainingAccessPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -307,154 +495,17 @@ export default function TrainingAccessPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {userDocuments.map((group) => {
-            const isExpanded = expandedDocuments.has(group.documentUuid)
-            return (
-              <Card key={group.documentUuid} className="elev p-0" size="default">
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => toggleDocument(group.documentUuid)}
-                      className="flex items-center gap-4 text-left flex-1 min-w-0"
-                    >
-                      <div
-                        className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
-                        style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                      >
-                        <Building2 className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 eyebrow mb-0.5">
-                          <span>Organization</span>
-                          <span aria-hidden="true">·</span>
-                          <span>{group.modules.length} modules</span>
-                        </div>
-                        <h2
-                          className="font-display m-0"
-                          style={{
-                            fontSize: "1.05rem",
-                            fontWeight: 500,
-                            lineHeight: 1.25,
-                          }}
-                        >
-                          {group.documentName}
-                        </h2>
-                      </div>
-                    </button>
-
-                    <div className="flex items-center gap-1 ml-2">
-                      <button
-                        type="button"
-                        onClick={() => triggerUpload(group.documentUuid)}
-                        disabled={uploadingForDocument === group.documentUuid}
-                        className="p-1.5 rounded-md transition-colors"
-                        style={{ color: "var(--muted)" }}
-                        aria-label="Upload additional documents"
-                        title="Upload additional documents"
-                      >
-                        {uploadingForDocument === group.documentUuid ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4" />
-                        )}
-                      </button>
-                      <AlertDialog>
-                        <AlertDialogTrigger
-                          className="p-1.5 rounded-md transition-colors hover:bg-red-50"
-                          style={{ color: "var(--destructive)" }}
-                          aria-label="Remove document"
-                          title="Remove document"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Remove &ldquo;{group.documentName}&rdquo;?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will remove the document from your training hub. You can always
-                              add it back later.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              variant="destructive"
-                              onClick={() =>
-                                removeUserDocument({ documentUuid: group.documentUuid })
-                              }
-                            >
-                              Remove
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 shrink-0" style={{ color: "var(--muted)" }} />
-                      ) : (
-                        <ChevronDown
-                          className="w-5 h-5 shrink-0"
-                          style={{ color: "var(--muted)" }}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-
-                {isExpanded && group.modules.length > 0 && (
-                  <div className="border-t" style={{ borderColor: "var(--line)" }}>
-                    <ol className="divide-y" style={{ borderColor: "var(--line)" }}>
-                      {group.modules.map((module: any, idx: number) => (
-                        <li key={module._id}>
-                          <div className="px-5 py-4 flex items-center gap-5">
-                            <div
-                              className="w-8 h-8 rounded-md flex items-center justify-center shrink-0"
-                              style={{ background: "var(--paper-deep)", color: "var(--ink-soft)" }}
-                            >
-                              <span
-                                className="text-xs"
-                                style={{ fontFamily: "var(--font-mono)", fontWeight: 500 }}
-                              >
-                                {String(idx + 1).padStart(2, "0")}
-                              </span>
-                            </div>
-
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 eyebrow mb-0.5">
-                                <span>{module.topics[0]}</span>
-                                <span aria-hidden="true">·</span>
-                                <Clock className="w-3 h-3" />
-                                <span>{module.duration}</span>
-                              </div>
-                              <h3
-                                className="font-display m-0"
-                                style={{ fontSize: "0.95rem", fontWeight: 500, lineHeight: 1.3 }}
-                              >
-                                {module.title}
-                              </h3>
-                            </div>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                router.push(`/training/${group.documentUuid}/${module._id}`)
-                              }
-                            >
-                              <span>Open</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </Card>
-            )
-          })}
+          {userDocuments.map((group) => (
+            <DocumentGroupCard
+              key={group.documentUuid}
+              group={group}
+              isExpanded={expandedDocuments.has(group.documentUuid)}
+              onToggle={() => toggleDocument(group.documentUuid)}
+              onUpload={() => triggerUpload(group.documentUuid)}
+              onRemove={() => removeUserDocument({ documentUuid: group.documentUuid })}
+              isUploading={uploadingForDocument === group.documentUuid}
+            />
+          ))}
         </div>
       )}
     </div>

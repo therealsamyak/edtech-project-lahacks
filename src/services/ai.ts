@@ -22,6 +22,21 @@ export interface QuizItem {
   correctAnswer: string
 }
 
+export interface ModuleItem {
+  title: string
+  description: string
+  content: string
+  duration: string
+  topics: string[]
+  highlights: string[]
+  quizQuestions: Array<{
+    question: string
+    options: string[]
+    correctIndex: number
+  }>
+  order: number
+}
+
 interface QuizPayload {
   quiz?: unknown
   questions?: unknown
@@ -52,6 +67,16 @@ const QUIZ_SYSTEM_PROMPT = [
   "Return valid JSON only with no markdown, prose, or code fences.",
   "Generate multiple-choice quiz items grounded in the provided section.",
   "Each item must include: question, options (array of strings), correctAnswer.",
+].join(" ")
+
+const MODULE_SYSTEM_PROMPT = [
+  "You are a senior compliance training module designer.",
+  "Return valid JSON only with no markdown, prose, or code fences.",
+  "Generate a structured training module from the provided document text.",
+  "The module must include: title, description, content (detailed summary), duration estimate, topics array, highlights array, quizQuestions array, and order.",
+  "Each quiz question must include: question (string), options (array of 4 strings), correctIndex (0-based integer indicating the correct option).",
+  "Generate exactly 3 to 5 quiz questions.",
+  "Do NOT include a correctAnswer string field — use correctIndex only.",
 ].join(" ")
 
 export class ComplianceAIService {
@@ -184,6 +209,39 @@ export class ComplianceAIService {
     return normalizeQuizItems(parsed)
   }
 
+  async generateModule(fullText: string): Promise<ModuleItem> {
+    // Note: text truncated to 8000 chars due to model context limits
+    const truncated = fullText.slice(0, 8000)
+
+    const response = await this.generateTextWithFailover({
+      models: this.quizModels,
+      system: MODULE_SYSTEM_PROMPT,
+      prompt: [
+        "Document Text:",
+        truncated.trim(),
+        "",
+        "Return this exact JSON shape:",
+        '{"title":"...","description":"...","content":"...","duration":"...","topics":["..."],"highlights":["..."],"quizQuestions":[{"question":"...","options":["A","B","C","D"],"correctIndex":0}],"order":0}',
+        "",
+        "Rules:",
+        "- Generate 3 to 5 quiz questions.",
+        "- Each question must have exactly 4 options.",
+        "- `correctIndex` is a 0-based integer indicating the correct option.",
+        "- Do NOT include a `correctAnswer` string field.",
+      ].join("\n"),
+      temperature: 0,
+    })
+
+    const rawText = response.text
+
+    if (!rawText) {
+      throw new Error(`Module model returned an empty response (model: ${response.model}).`)
+    }
+
+    const parsed = safeJsonParse(rawText)
+    return normalizeModule(parsed)
+  }
+
   async generateEmbedding(text: string): Promise<number[]> {
     const trimmedText = text.trim()
     if (!trimmedText) throw new Error("Text cannot be empty for embedding.")
@@ -255,4 +313,109 @@ function parseQuizItem(item: unknown): QuizItem {
     options: options.map((option) => option.trim()),
     correctAnswer: correctAnswer.trim(),
   }
+}
+
+function normalizeModule(payload: unknown): ModuleItem {
+  if (typeof payload !== "object" || payload === null) {
+    throw new Error("Module response JSON must be an object.")
+  }
+
+  const raw = payload as Record<string, unknown>
+
+  const title = raw.title
+  const description = raw.description
+  const content = raw.content
+  const duration = raw.duration
+  const topics = raw.topics
+  const highlights = raw.highlights
+  const quizQuestions = raw.quizQuestions
+
+  if (typeof title !== "string" || title.trim().length === 0) {
+    throw new Error("Module `title` must be a non-empty string.")
+  }
+  if (typeof description !== "string" || description.trim().length === 0) {
+    throw new Error("Module `description` must be a non-empty string.")
+  }
+  if (typeof content !== "string" || content.trim().length === 0) {
+    throw new Error("Module `content` must be a non-empty string.")
+  }
+  if (typeof duration !== "string" || duration.trim().length === 0) {
+    throw new Error("Module `duration` must be a non-empty string.")
+  }
+  if (!Array.isArray(topics) || !topics.every((v) => typeof v === "string")) {
+    throw new Error("Module `topics` must be an array of strings.")
+  }
+  if (!Array.isArray(highlights) || !highlights.every((v) => typeof v === "string")) {
+    throw new Error("Module `highlights` must be an array of strings.")
+  }
+  if (!Array.isArray(quizQuestions) || quizQuestions.length === 0) {
+    throw new Error("Module `quizQuestions` must be a non-empty array.")
+  }
+
+  return {
+    title: title.trim(),
+    description: description.trim(),
+    content: content.trim(),
+    duration: duration.trim(),
+    topics: topics.map((t) => String(t).trim()),
+    highlights: highlights.map((h) => String(h).trim()),
+    quizQuestions: quizQuestions.map(parseModuleQuizQuestion),
+    order: 0,
+  }
+}
+
+function parseModuleQuizQuestion(item: unknown): {
+  question: string
+  options: string[]
+  correctIndex: number
+} {
+  if (typeof item !== "object" || item === null) {
+    throw new Error("Module quiz question must be an object.")
+  }
+
+  const raw = item as Record<string, unknown>
+  const question = raw.question
+  const options = raw.options
+  const correctIndex = raw.correctIndex
+  const correctAnswer = raw.correctAnswer
+
+  if (typeof question !== "string" || question.trim().length === 0) {
+    throw new Error("Module quiz question `question` must be a non-empty string.")
+  }
+  if (
+    !Array.isArray(options) ||
+    options.length < 2 ||
+    !options.every((v) => typeof v === "string")
+  ) {
+    throw new Error("Module quiz question `options` must be an array of at least 2 strings.")
+  }
+
+  if (
+    typeof correctIndex === "number" &&
+    Number.isInteger(correctIndex) &&
+    correctIndex >= 0 &&
+    correctIndex < options.length
+  ) {
+    return {
+      question: question.trim(),
+      options: options.map((o) => String(o).trim()),
+      correctIndex,
+    }
+  }
+
+  if (typeof correctAnswer === "string") {
+    const idx = options.findIndex((o) => o === correctAnswer)
+    if (idx === -1) {
+      throw new Error("Module quiz question `correctAnswer` must be present in `options`.")
+    }
+    return {
+      question: question.trim(),
+      options: options.map((o) => String(o).trim()),
+      correctIndex: idx,
+    }
+  }
+
+  throw new Error(
+    "Module quiz question must include `correctIndex` (number) or `correctAnswer` (string).",
+  )
 }
