@@ -2,7 +2,6 @@
 import { v } from "convex/values"
 import { action } from "./_generated/server"
 import { internal } from "./_generated/api"
-import * as bcrypt from "bcryptjs"
 import pdf from "pdf-parse"
 import { ComplianceAIService } from "../src/services/ai"
 
@@ -17,9 +16,9 @@ export const ingestComplianceDoc = action({
     const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
 
     const compliance = await ctx.runQuery(internal.compliance.getComplianceRecord, {
-      complianceId: args.complianceId,
+      slug: args.complianceId,
     })
-    if (!compliance || !(await bcrypt.compare(args.passphrase, compliance.passphrase))) {
+    if (!compliance || compliance.passphrase !== args.passphrase) {
       throw new Error("Unauthorized")
     }
 
@@ -50,7 +49,7 @@ export const ingestComplianceDoc = action({
     ]
 
     await ctx.runMutation(internal.compliance.saveComplianceChunks, {
-      complianceId: args.complianceId,
+      complianceDocumentId: args.complianceId,
       chunks: processed,
     })
 
@@ -64,7 +63,7 @@ export const ingestComplianceDoc = action({
 
 export const askQuestion = action({
   args: {
-    complianceId: v.string(),
+    complianceDocumentId: v.string(),
     question: v.string(),
   },
   handler: async (ctx, args) => {
@@ -72,9 +71,9 @@ export const askQuestion = action({
 
     const questionEmbedding = await ai.generateEmbedding(args.question)
 
-    const searchResults = await ctx.vectorSearch("complianceDocs", "by_embedding", {
+    const searchResults = await ctx.vectorSearch("documentChunks", "by_embedding", {
       vector: questionEmbedding,
-      filter: (q) => q.eq("complianceId", args.complianceId),
+      filter: (q) => q.eq("complianceDocumentId", args.complianceDocumentId),
       limit: 5,
     })
 

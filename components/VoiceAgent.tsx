@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button"
 interface VoiceAgentProps {
   agentId: string
   /**
-   * Optional company / compliance context. When provided, it's forwarded to the
+   * Optional compliance document context. When provided, it's forwarded to the
    * agent as a dynamic variable named `compliance_id` so the system prompt can
-   * reference it and the server tool can scope its lookup to that company.
+   * reference it and the server tool can scope its lookup to that document.
    */
   complianceId?: string
 }
@@ -125,7 +125,7 @@ function VoiceAgentControls({ agentId, complianceId }: VoiceAgentProps) {
       )}
 
       <p className="text-xs text-center" style={{ color: "var(--muted)" }}>
-        Voice answers come from your company's compliance docs.
+        Voice answers are grounded in your compliance document content.
       </p>
     </div>
   )

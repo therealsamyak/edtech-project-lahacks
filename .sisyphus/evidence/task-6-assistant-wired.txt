@@ -1,0 +1,17 @@
+Task 6: Wire assistant.ts with real RAG via ComplianceAIService
+
+COMPLETED: 2026-04-25
+
+Changes:
+- convex/assistant.ts: Replaced stub with full RAG implementation
+  - Imports ComplianceAIService, internal API
+  - chat action accepts message (required) + complianceDocumentId (optional)
+  - With docId: embed question → vectorSearch → getChunksByIds → generateComplianceAction → return string
+  - Without docId: generateComplianceAction("", message) → return string
+  - Returns string (not object) — compatible with voiceAgent.ts expectations
+
+Verification:
+- bunx tsc --noEmit: no errors in convex/assistant.ts (pre-existing errors in other files remain)
+- Note: Added local variable `docId` after narrowing to fix TS2345 (filter callback doesn't preserve narrowing)
+
+Pattern followed: convex/ingest.ts:askQuestion (lines 64-92)

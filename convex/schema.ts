@@ -15,16 +15,18 @@ export default defineSchema({
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
   }).index("by_token", ["tokenIdentifier"]),
-  companies: defineTable({
+  complianceDocuments: defineTable({
     name: v.string(),
     uuid: v.string(),
+    slug: v.string(),
     passphrase: v.string(),
+    createdBy: v.optional(v.string()),
     createdAt: v.number(),
   })
     .index("by_uuid", ["uuid"])
-    .index("by_passphrase", ["passphrase"]),
+    .index("by_slug", ["slug"]),
   trainingModules: defineTable({
-    companyId: v.id("companies"),
+    complianceDocumentId: v.id("complianceDocuments"),
     title: v.string(),
     description: v.string(),
     content: v.string(),
@@ -39,7 +41,7 @@ export default defineSchema({
       }),
     ),
     order: v.number(),
-  }).index("by_companyId", ["companyId"]),
+  }).index("by_complianceDocumentId", ["complianceDocumentId"]),
   quizResults: defineTable({
     userId: v.id("users"),
     moduleId: v.id("trainingModules"),
@@ -48,39 +50,44 @@ export default defineSchema({
     passed: v.boolean(),
     completedAt: v.number(),
   }),
-  userCompanies: defineTable({
+  userDocuments: defineTable({
     userId: v.id("users"),
-    companyId: v.id("companies"),
+    complianceDocumentId: v.id("complianceDocuments"),
     verifiedAt: v.number(),
   })
     .index("by_userId", ["userId"])
-    .index("by_userId_companyId", ["userId", "companyId"]),
+    .index("by_userId_documentId", ["userId", "complianceDocumentId"]),
   documents: defineTable({
-    companyId: v.id("companies"),
+    complianceDocumentId: v.id("complianceDocuments"),
     storageId: v.id("_storage"),
     originalName: v.string(),
     uploadedAt: v.number(),
     processingStatus: v.optional(v.string()),
   })
-    .index("by_companyId", ["companyId"])
-    .index("by_companyId_status", ["companyId", "processingStatus"]),
-  compliances: defineTable({
-    complianceId: v.string(),
-    name: v.string(),
-    passphrase: v.string(),
-    createdBy: v.string(),
-  }).index("by_compliance_id", ["complianceId"]),
-  complianceDocs: defineTable({
-    complianceId: v.string(),
+    .index("by_complianceDocumentId", ["complianceDocumentId"])
+    .index("by_complianceDocumentId_status", ["complianceDocumentId", "processingStatus"]),
+  documentChunks: defineTable({
+    complianceDocumentId: v.string(),
     text: v.string(),
     module: v.string(),
     embedding: v.array(v.float64()),
   })
-    .index("by_compliance_id", ["complianceId"])
-    .index("by_module", ["complianceId", "module"])
+    .index("by_compliance_document_id", ["complianceDocumentId"])
+    .index("by_module", ["complianceDocumentId", "module"])
     .vectorIndex("by_embedding", {
       vectorField: "embedding",
       dimensions: 1536,
-      filterFields: ["complianceId"],
+      filterFields: ["complianceDocumentId"],
     }),
+  moduleQuizzes: defineTable({
+    complianceDocumentId: v.string(),
+    module: v.string(),
+    quizItems: v.array(
+      v.object({
+        question: v.string(),
+        options: v.array(v.string()),
+        correctIndex: v.number(),
+      }),
+    ),
+  }).index("by_document_module", ["complianceDocumentId", "module"]),
 })

@@ -51,14 +51,14 @@ export const submitQuiz = mutation({
 
 export const generateModuleQuiz = action({
   args: {
-    complianceId: v.string(),
+    complianceDocumentId: v.string(),
     module: v.string(),
   },
   handler: async (ctx, args) => {
     const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
 
     const chunks: string[] = await ctx.runQuery(internal.compliance.getChunksByModule, {
-      complianceId: args.complianceId,
+      complianceDocumentId: args.complianceDocumentId,
       module: args.module,
     })
 

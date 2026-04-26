@@ -1,15 +1,17 @@
 import { internalMutation, internalQuery } from "./_generated/server"
 import { v } from "convex/values"
 
-export const getDocumentsByCompanyAndStorage = internalQuery({
+export const getFilesByDocumentAndStorage = internalQuery({
   args: {
-    companyId: v.id("companies"),
+    complianceDocumentId: v.id("complianceDocuments"),
     storageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
     const docs = await ctx.db
       .query("documents")
-      .withIndex("by_companyId", (q) => q.eq("companyId", args.companyId))
+      .withIndex("by_complianceDocumentId", (q) =>
+        q.eq("complianceDocumentId", args.complianceDocumentId),
+      )
       .collect()
     return docs.filter((d) => d.storageId === args.storageId)
   },
@@ -27,7 +29,7 @@ export const updateDocumentStatus = internalMutation({
 
 export const saveModuleQuiz = internalMutation({
   args: {
-    complianceId: v.string(),
+    complianceDocumentId: v.string(),
     module: v.string(),
     quizItems: v.array(
       v.object({
@@ -40,8 +42,8 @@ export const saveModuleQuiz = internalMutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("moduleQuizzes")
-      .withIndex("by_compliance_module", (q) =>
-        q.eq("complianceId", args.complianceId).eq("module", args.module),
+      .withIndex("by_document_module", (q) =>
+        q.eq("complianceDocumentId", args.complianceDocumentId).eq("module", args.module),
       )
       .unique()
 
@@ -49,25 +51,10 @@ export const saveModuleQuiz = internalMutation({
       await ctx.db.patch(existing._id, { quizItems: args.quizItems })
     } else {
       await ctx.db.insert("moduleQuizzes", {
-        complianceId: args.complianceId,
+        complianceDocumentId: args.complianceDocumentId,
         module: args.module,
         quizItems: args.quizItems,
       })
     }
-  },
-})
-
-export const getDocumentsByStatus = internalQuery({
-  args: {
-    companyId: v.id("companies"),
-    status: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("documents")
-      .withIndex("by_companyId_status", (q) =>
-        q.eq("companyId", args.companyId).eq("processingStatus", args.status),
-      )
-      .collect()
   },
 })

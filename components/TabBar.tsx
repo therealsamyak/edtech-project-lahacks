@@ -23,7 +23,7 @@ export default function TabBar() {
           }}
         >
           <Building2 className="w-4 h-4" aria-hidden="true" />
-          <span>Register company</span>
+          <span>Register document</span>
         </Link>
         <Link
           href="/training"
