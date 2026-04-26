@@ -40,7 +40,17 @@ export function FloatingButtonGroup() {
   )
 
   const systemContext = moduleData
-    ? [moduleData.plainLanguageSummary, ...(moduleData.highlights ?? [])].filter(Boolean).join("\n")
+    ? [
+        moduleData.plainLanguageSummary,
+        "",
+        "Key highlights:",
+        ...(moduleData.highlights ?? []),
+        "",
+        "Full module content:",
+        moduleData.content,
+      ]
+        .filter((v) => v !== undefined && v !== "")
+        .join("\n")
     : undefined
 
   useEffect(() => {
