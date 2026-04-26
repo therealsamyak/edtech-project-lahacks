@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 export default function SignIn() {
   const { signIn } = useAuthActions()
-  const [flow, setFlow] = useState<"signIn" | "signUp">("signIn")
+  const [flow] = useState<"signIn" | "signUp">("signIn")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
