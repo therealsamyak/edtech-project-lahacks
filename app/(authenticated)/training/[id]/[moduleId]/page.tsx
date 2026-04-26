@@ -37,6 +37,7 @@ export default function ModuleContentPage() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [audioState, setAudioState] = useState<AudioState>("idle")
   const [audioError, setAudioError] = useState<string | null>(null)
+  const playOnReady = useRef(false)
 
   const handleListen = async () => {
     setAudioError(null)
@@ -67,11 +68,9 @@ export default function ModuleContentPage() {
       })
       const url = `data:${result.mimeType};base64,${result.base64}`
       setAudioUrl(url)
-      // Wait one tick for the <audio src> to bind, then play.
-      requestAnimationFrame(() => {
-        void audioRef.current?.play()
-        setAudioState("playing")
-      })
+      // Playback is triggered in onCanPlay to ensure the <audio> element
+      // has mounted and loaded the data-URL source before calling play().
+      playOnReady.current = true
     } catch (err) {
       setAudioState("error")
       setAudioError(err instanceof Error ? err.message : "Could not generate audio.")
@@ -174,6 +173,13 @@ export default function ModuleContentPage() {
           <audio
             ref={audioRef}
             src={audioUrl}
+            onCanPlay={() => {
+              if (playOnReady.current) {
+                playOnReady.current = false
+                void audioRef.current?.play()
+                setAudioState("playing")
+              }
+            }}
             onEnded={() => setAudioState("idle")}
             onPause={() => {
               if (audioState === "playing") setAudioState("idle")

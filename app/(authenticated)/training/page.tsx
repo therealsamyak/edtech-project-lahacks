@@ -91,7 +91,7 @@ function DocumentGroupCard({
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 eyebrow mb-0.5">
-                <span>Organization</span>
+                <span>Compliance Document</span>
                 <span aria-hidden="true">·</span>
                 <span>{group.modules.length} modules</span>
               </div>
