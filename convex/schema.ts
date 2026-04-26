@@ -14,7 +14,9 @@ export default defineSchema({
     emailVerificationTime: v.optional(v.number()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-  }).index("by_token", ["tokenIdentifier"]),
+  })
+    .index("by_token", ["tokenIdentifier"])
+    .index("by_email", ["email"]),
   complianceDocuments: defineTable({
     name: v.string(),
     uuid: v.string(),
