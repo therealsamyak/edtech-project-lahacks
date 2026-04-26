@@ -9,14 +9,10 @@ import { Button } from "@/components/ui/button"
 
 export default function SignIn() {
   const { signIn } = useAuthActions()
-  const [flow] = useState<"signIn" | "signUp">("signIn")
+  // Re-enabled setFlow to allow switching between modes
+  const [flow, setFlow] = useState<"signIn" | "signUp">("signIn")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-
-  // Signup is disabled — log for debug
-  const handleSignUpAttempt = () => {
-    console.log("[DEBUG] Signup is currently disabled")
-  }
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-paper">
@@ -73,13 +69,12 @@ export default function SignIn() {
             e.preventDefault()
             setLoading(true)
             setError(null)
-            if (flow === "signUp") {
-              handleSignUpAttempt()
-              setLoading(false)
-              return
-            }
+
             const formData = new FormData(e.target as HTMLFormElement)
             formData.set("flow", flow)
+
+            // The signIn function handles both "signIn" and "signUp" flows
+            // based on the "flow" entry in formData
             void signIn("password", formData)
               .then(() => {
                 window.location.href = "/"
@@ -128,13 +123,20 @@ export default function SignIn() {
                 <Label htmlFor="password" className="text-ink">
                   Password
                 </Label>
-                <button
-                  type="button"
-                  className="text-xs font-medium underline underline-offset-2 hover:no-underline cursor-pointer transition-all"
-                  style={{ color: "var(--accent)", background: "none", border: "none", padding: 0 }}
-                >
-                  Forgot?
-                </button>
+                {flow === "signIn" && (
+                  <button
+                    type="button"
+                    className="text-xs font-medium underline underline-offset-2 hover:no-underline cursor-pointer transition-all"
+                    style={{
+                      color: "var(--accent)",
+                      background: "none",
+                      border: "none",
+                      padding: 0,
+                    }}
+                  >
+                    Forgot?
+                  </button>
+                )}
               </div>
               <Input
                 id="password"
@@ -163,6 +165,20 @@ export default function SignIn() {
                 </>
               )}
             </Button>
+          </div>
+
+          {/* Added the toggle button back to the UI */}
+          <div className="flex items-center justify-center gap-2 text-sm mt-6">
+            <span className="text-muted-foreground">
+              {flow === "signIn" ? "Don't have an account?" : "Already have an account?"}
+            </span>
+            <button
+              type="button"
+              className="text-accent font-medium underline underline-offset-2 hover:no-underline cursor-pointer transition-all"
+              onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
+            >
+              {flow === "signIn" ? "Sign up" : "Sign in"}
+            </button>
           </div>
 
           {error && (
