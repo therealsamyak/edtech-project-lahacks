@@ -30,7 +30,7 @@ export const ingestComplianceDoc = internalAction({
 
       const fullText = data.text
         .replace(/\s+/g, " ")
-        .replace(/\u0000/g, "")
+        .replace(new RegExp(String.fromCharCode(0), "g"), "")
         .trim()
 
       if (fullText.length < 100) {
