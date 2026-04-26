@@ -117,7 +117,7 @@ export default function SignIn() {
                 type="email"
                 name="email"
                 autoComplete="email"
-                placeholder="you@company.com"
+                placeholder="you@example.com"
                 required
                 className="h-9 bg-input-background border-line"
               />

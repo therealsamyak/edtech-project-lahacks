@@ -35,7 +35,7 @@ export const storeUser = mutation({
 
 export const updateModuleProgress = mutation({
   args: {
-    complianceId: v.string(),
+    complianceDocumentId: v.string(),
     module: v.string(),
     score: v.number(),
   },
@@ -55,12 +55,12 @@ export const updateModuleProgress = mutation({
     if (!user) throw new Error("User not found")
 
     const fullProgress = user.progress ?? {}
-    const complianceMap = fullProgress[args.complianceId] ?? {}
+    const complianceMap = fullProgress[args.complianceDocumentId] ?? {}
 
     const existingScore = complianceMap[args.module] ?? 0
     if (args.score > existingScore) {
       complianceMap[args.module] = args.score
-      fullProgress[args.complianceId] = complianceMap
+      fullProgress[args.complianceDocumentId] = complianceMap
 
       await ctx.db.patch(user._id, {
         progress: fullProgress,

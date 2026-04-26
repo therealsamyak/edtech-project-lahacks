@@ -1,0 +1,19 @@
+=== GREP: stale company refs ===
+(none)
+
+=== GREP: old API paths ===
+(none)
+
+=== GREP: old training API ===
+(none)
+
+=== GREP: new API paths ===
+app/(authenticated)/register/page.tsx:33:  const registerDocument = useMutation(api.documents.registerDocument)
+app/(authenticated)/register/page.tsx:34:  const generateUploadUrl = useMutation(api.documents.generateUploadUrl)
+app/(authenticated)/training/page.tsx:67:  const allDocuments = useQuery(api.documents.getAllDocuments)
+app/(authenticated)/training/page.tsx:68:  const addFiles = useMutation(api.documents.addFiles)
+app/(authenticated)/training/page.tsx:69:  const generateUploadUrl = useMutation(api.documents.generateUploadUrl)
+
+=== NEW training API ===
+app/(authenticated)/training/page.tsx:65:  const removeUserDocument = useMutation(api.training.removeUserDocument)
+app/(authenticated)/training/page.tsx:66:  const userDocuments = useQuery(api.training.getUserDocumentsWithModules)

@@ -11,8 +11,8 @@ import { VoiceAgent } from "@/components/VoiceAgent"
  *
  * Mirrors AssistantPopover's pattern (chat) but for spoken interaction. Reads the
  * agent ID from `NEXT_PUBLIC_ELEVENLABS_AGENT_ID`; if the user is on a training
- * page, the company UUID from the URL is forwarded to the agent as a dynamic
- * variable so its responses can be company-scoped.
+ * page, the document UUID from the URL is forwarded to the agent as a dynamic
+ * variable so its responses can be document-scoped.
  *
  * Setup is a one-time dashboard step — see docs/voice-agent.md.
  */

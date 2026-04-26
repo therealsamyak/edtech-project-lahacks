@@ -5,7 +5,7 @@ export const wipeAndReseed = mutation({
   handler: async (ctx) => {
     let batch
     do {
-      batch = await ctx.db.query("userCompanies").take(100)
+      batch = await ctx.db.query("userDocuments").take(100)
       for (const doc of batch) {
         await ctx.db.delete(doc._id)
       }
@@ -26,15 +26,16 @@ export const wipeAndReseed = mutation({
     } while (batch.length > 0)
 
     do {
-      batch = await ctx.db.query("companies").take(100)
+      batch = await ctx.db.query("complianceDocuments").take(100)
       for (const doc of batch) {
         await ctx.db.delete(doc._id)
       }
     } while (batch.length > 0)
 
-    const companyId = await ctx.db.insert("companies", {
+    const documentId = await ctx.db.insert("complianceDocuments", {
       name: "Acme Corporation",
       uuid: "comp-a7f3e9d2-4c8b-11ef-9a2c-0242ac120002",
+      slug: "acme-corporation-2026",
       passphrase: "secure-dolphin-cascade-2026",
       createdAt: Date.now(),
     })
@@ -164,10 +165,10 @@ export const wipeAndReseed = mutation({
     ]
 
     for (const mod of modules) {
-      await ctx.db.insert("trainingModules", { companyId, ...mod })
+      await ctx.db.insert("trainingModules", { complianceDocumentId: documentId, ...mod })
     }
 
     console.log(`Seed: inserted ${modules.length} training modules.`)
-    return { status: "seeded", companyId }
+    return { status: "seeded", documentId }
   },
 })

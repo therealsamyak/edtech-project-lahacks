@@ -1,0 +1,15 @@
+Task 4: Remove stub functions from convex/ingestion.ts
+
+DONE
+
+Changes:
+- Removed processDocument (internalMutation stub, lines 5-18)
+- Removed processDocumentFiles (internalMutation, lines 20-40)
+- Removed unused import: `import { internal } from "./_generated/api"`
+- Removed unused import: `internalMutation` (only `internalQuery` kept)
+- Preserved: getDocumentsByStatus (internalQuery)
+
+Verification:
+- grep for processDocument/processDocumentFiles across convex/: 0 matches (no dangling refs)
+- bunx tsc --noEmit: only pre-existing errors (missing modules: @elevenlabs/react, cmdk, pdf-parse, ai, @openrouter/ai-sdk-provider, vitest). No new errors.
+- File is now 17 lines (imports + single query function)

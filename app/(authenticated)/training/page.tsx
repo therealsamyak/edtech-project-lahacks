@@ -50,38 +50,38 @@ import {
 
 export default function TrainingAccessPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [company, setCompany] = useState("")
+  const [document, setDocument] = useState("")
   const [uuid, setUuid] = useState("")
   const [passphrase, setPassphrase] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [expandedCompanies, setExpandedCompanies] = useState<Set<string>>(new Set())
-  const [uploadingForCompany, setUploadingForCompany] = useState<string | null>(null)
+  const [expandedDocuments, setExpandedDocuments] = useState<Set<string>>(new Set())
+  const [uploadingForDocument, setUploadingForDocument] = useState<string | null>(null)
   const uploadInputRef = useRef<HTMLInputElement>(null)
-  const pendingCompanyUuid = useRef<string | null>(null)
+  const pendingDocumentUuid = useRef<string | null>(null)
 
   const router = useRouter()
   const verifyAccess = useMutation(api.training.verifyAccess)
-  const removeUserCompany = useMutation(api.training.removeUserCompany)
-  const userCompanies = useQuery(api.training.getUserCompaniesWithModules)
-  const allCompanies = useQuery(api.companies.getAllCompanies)
-  const addDocuments = useMutation(api.companies.addDocuments)
-  const generateUploadUrl = useMutation(api.companies.generateUploadUrl)
+  const removeUserDocument = useMutation(api.training.removeUserDocument)
+  const userDocuments = useQuery(api.training.getUserDocumentsWithModules)
+  const allDocuments = useQuery(api.documents.getAllDocuments)
+  const addFiles = useMutation(api.documents.addFiles)
+  const generateUploadUrl = useMutation(api.documents.generateUploadUrl)
 
   useEffect(() => {
-    if (allCompanies && allCompanies.length > 0) {
-      console.log("\n========== ALL COMPANIES ==========")
-      allCompanies.forEach((c) => {
-        console.log(`Company: ${c.name}`)
+    if (allDocuments && allDocuments.length > 0) {
+      console.log("\n========== ALL DOCUMENTS ==========")
+      allDocuments.forEach((c) => {
+        console.log(`Document: ${c.name}`)
         console.log(`  UUID:       ${c.uuid}`)
         console.log(`  Passphrase: ${c.passphrase}`)
       })
       console.log("====================================\n")
     }
-  }, [allCompanies])
+  }, [allDocuments])
 
-  const toggleCompany = (uuid: string) => {
-    setExpandedCompanies((prev) => {
+  const toggleDocument = (uuid: string) => {
+    setExpandedDocuments((prev) => {
       const next = new Set(prev)
       if (next.has(uuid)) next.delete(uuid)
       else next.add(uuid)
@@ -94,9 +94,9 @@ export default function TrainingAccessPage() {
     setIsLoading(true)
     setError("")
     try {
-      await verifyAccess({ company: company || undefined, uuid, passphrase })
+      await verifyAccess({ document: document || undefined, uuid, passphrase })
       setDialogOpen(false)
-      setCompany("")
+      setDocument("")
       setUuid("")
       setPassphrase("")
     } catch (err) {
@@ -106,19 +106,19 @@ export default function TrainingAccessPage() {
     }
   }
 
-  const hasCompanies = userCompanies && userCompanies.length > 0
+  const hasDocuments = userDocuments && userDocuments.length > 0
 
   const MAX_FILE_SIZE = 50 * 1024 * 1024
 
-  const triggerUpload = (companyUuid: string) => {
-    pendingCompanyUuid.current = companyUuid
+  const triggerUpload = (documentUuid: string) => {
+    pendingDocumentUuid.current = documentUuid
     uploadInputRef.current?.click()
   }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? [])
     if (files.length === 0) return
-    const uuid = pendingCompanyUuid.current
+    const uuid = pendingDocumentUuid.current
     if (!uuid) return
 
     const oversized = files.find((f) => f.size > MAX_FILE_SIZE)
@@ -128,7 +128,7 @@ export default function TrainingAccessPage() {
       return
     }
 
-    setUploadingForCompany(uuid)
+    setUploadingForDocument(uuid)
 
     try {
       const uploadedDocs: { storageId: Id<"_storage">; originalName: string }[] = []
@@ -145,12 +145,12 @@ export default function TrainingAccessPage() {
         console.log(`Document uploaded: ${file.name}`)
       }
 
-      await addDocuments({ companyUuid: uuid, documents: uploadedDocs })
+      await addFiles({ documentUuid: uuid, documents: uploadedDocs })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.")
     } finally {
-      setUploadingForCompany(null)
-      pendingCompanyUuid.current = null
+      setUploadingForDocument(null)
+      pendingDocumentUuid.current = null
       e.target.value = ""
     }
   }
@@ -175,17 +175,17 @@ export default function TrainingAccessPage() {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <Button variant="outline" onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4" />
-            <span>Add company</span>
+            <span>Add document</span>
           </Button>
 
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <div className="eyebrow mb-1">Access</div>
               <DialogTitle className="font-display" style={{ fontWeight: 500 }}>
-                Company credentials
+                Document credentials
               </DialogTitle>
               <DialogDescription>
-                Enter the credentials your administrator issued. Once verified, this company will
+                Enter the credentials your administrator issued. Once verified, this document will
                 appear in your training hub.
               </DialogDescription>
             </DialogHeader>
@@ -193,29 +193,29 @@ export default function TrainingAccessPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label
-                  htmlFor="company-select"
+                  htmlFor="document-select"
                   className="block text-sm mb-1.5"
                   style={{ color: "var(--ink)" }}
                 >
-                  Company <span style={{ color: "var(--muted)" }}>(optional)</span>
+                  Document <span style={{ color: "var(--muted)" }}>(optional)</span>
                 </label>
                 <Combobox
-                  items={allCompanies ?? []}
+                  items={allDocuments ?? []}
                   onValueChange={(v) => {
-                    const selected = allCompanies?.find((c) => c.name === v)
+                    const selected = allDocuments?.find((c) => c.name === v)
                     if (selected) {
-                      setCompany(selected.name)
+                      setDocument(selected.name)
                       setUuid(selected.uuid)
                     }
                   }}
                 >
                   <ComboboxInput
-                    id="company-select"
-                    placeholder="Select a company…"
+                    id="document-select"
+                    placeholder="Select a document…"
                     className="h-9 bg-input-background border-line"
                   />
                   <ComboboxContent>
-                    <ComboboxEmpty>No companies found.</ComboboxEmpty>
+                    <ComboboxEmpty>No documents found.</ComboboxEmpty>
                     <ComboboxList>
                       {(item) => (
                         <ComboboxItem key={item._id} value={item.name}>
@@ -233,7 +233,7 @@ export default function TrainingAccessPage() {
                   className="block text-sm mb-1.5"
                   style={{ color: "var(--ink)" }}
                 >
-                  Company UUID
+                  Document UUID
                 </label>
                 <Input
                   id="uuid"
@@ -287,9 +287,9 @@ export default function TrainingAccessPage() {
         </Dialog>
       </header>
 
-      {!userCompanies ? (
-        <p style={{ color: "var(--muted)" }}>Loading your companies…</p>
-      ) : !hasCompanies ? (
+      {!userDocuments ? (
+        <p style={{ color: "var(--muted)" }}>Loading your documents…</p>
+      ) : !hasDocuments ? (
         <div className="text-center py-16">
           <div
             className="w-14 h-14 rounded-xl mx-auto flex items-center justify-center mb-4"
@@ -298,23 +298,23 @@ export default function TrainingAccessPage() {
             <Building2 className="w-6 h-6" style={{ color: "var(--muted)" }} />
           </div>
           <p className="font-display" style={{ fontWeight: 500 }}>
-            No companies added yet.
+            No documents added yet.
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-            Add a company using the button above to see training modules.
+            Add a document using the button above to see training modules.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
-          {userCompanies.map((group) => {
-            const isExpanded = expandedCompanies.has(group.companyUuid)
+          {userDocuments.map((group) => {
+            const isExpanded = expandedDocuments.has(group.documentUuid)
             return (
-              <Card key={group.companyUuid} className="elev p-0" size="default">
+              <Card key={group.documentUuid} className="elev p-0" size="default">
                 <CardContent className="p-5">
                   <div className="flex items-center justify-between">
                     <button
                       type="button"
-                      onClick={() => toggleCompany(group.companyUuid)}
+                      onClick={() => toggleDocument(group.documentUuid)}
                       className="flex items-center gap-4 text-left flex-1 min-w-0"
                     >
                       <div
@@ -337,7 +337,7 @@ export default function TrainingAccessPage() {
                             lineHeight: 1.25,
                           }}
                         >
-                          {group.companyName}
+                          {group.documentName}
                         </h2>
                       </div>
                     </button>
@@ -345,14 +345,14 @@ export default function TrainingAccessPage() {
                     <div className="flex items-center gap-1 ml-2">
                       <button
                         type="button"
-                        onClick={() => triggerUpload(group.companyUuid)}
-                        disabled={uploadingForCompany === group.companyUuid}
+                        onClick={() => triggerUpload(group.documentUuid)}
+                        disabled={uploadingForDocument === group.documentUuid}
                         className="p-1.5 rounded-md transition-colors"
                         style={{ color: "var(--muted)" }}
                         aria-label="Upload additional documents"
                         title="Upload additional documents"
                       >
-                        {uploadingForCompany === group.companyUuid ? (
+                        {uploadingForDocument === group.documentUuid ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <Upload className="w-4 h-4" />
@@ -362,18 +362,18 @@ export default function TrainingAccessPage() {
                         <AlertDialogTrigger
                           className="p-1.5 rounded-md transition-colors hover:bg-red-50"
                           style={{ color: "var(--destructive)" }}
-                          aria-label="Remove company"
-                          title="Remove company"
+                          aria-label="Remove document"
+                          title="Remove document"
                         >
                           <Trash2 className="w-4 h-4" />
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Remove &ldquo;{group.companyName}&rdquo;?
+                              Remove &ldquo;{group.documentName}&rdquo;?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will remove the company from your training hub. You can always
+                              This will remove the document from your training hub. You can always
                               add it back later.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -381,7 +381,9 @@ export default function TrainingAccessPage() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               variant="destructive"
-                              onClick={() => removeUserCompany({ companyUuid: group.companyUuid })}
+                              onClick={() =>
+                                removeUserDocument({ documentUuid: group.documentUuid })
+                              }
                             >
                               Remove
                             </AlertDialogAction>
@@ -437,7 +439,7 @@ export default function TrainingAccessPage() {
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                router.push(`/training/${group.companyUuid}/${module._id}`)
+                                router.push(`/training/${group.documentUuid}/${module._id}`)
                               }
                             >
                               <span>Open</span>

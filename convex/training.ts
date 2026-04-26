@@ -14,19 +14,19 @@ export const getModule = query({
 
 export const getModules = query({
   args: {
-    companyId: v.string(),
+    documentUuid: v.string(),
   },
   handler: async (ctx, args) => {
-    const company = await ctx.db
-      .query("companies")
-      .withIndex("by_uuid", (q) => q.eq("uuid", args.companyId))
+    const document = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
       .unique()
 
-    if (!company) return null
+    if (!document) return null
 
     const modules = await ctx.db
       .query("trainingModules")
-      .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+      .withIndex("by_complianceDocumentId", (q) => q.eq("complianceDocumentId", document._id))
       .order("asc")
       .collect()
 
@@ -36,7 +36,7 @@ export const getModules = query({
 
 export const verifyAccess = mutation({
   args: {
-    company: v.optional(v.string()),
+    document: v.optional(v.string()),
     uuid: v.string(),
     passphrase: v.string(),
   },
@@ -47,7 +47,7 @@ export const verifyAccess = mutation({
     }
 
     const match = await ctx.db
-      .query("companies")
+      .query("complianceDocuments")
       .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
       .unique()
 
@@ -55,19 +55,21 @@ export const verifyAccess = mutation({
       throw new Error("Invalid credentials. Please check your UUID and passphrase.")
     }
 
-    if (args.company !== undefined && match.name !== args.company) {
-      throw new Error("Company name does not match the UUID provided.")
+    if (args.document !== undefined && match.name !== args.document) {
+      throw new Error("Document name does not match the UUID provided.")
     }
 
     const existing = await ctx.db
-      .query("userCompanies")
-      .withIndex("by_userId_companyId", (q) => q.eq("userId", userId).eq("companyId", match._id))
+      .query("userDocuments")
+      .withIndex("by_userId_documentId", (q) =>
+        q.eq("userId", userId).eq("complianceDocumentId", match._id),
+      )
       .unique()
 
     if (!existing) {
-      await ctx.db.insert("userCompanies", {
+      await ctx.db.insert("userDocuments", {
         userId,
-        companyId: match._id,
+        complianceDocumentId: match._id,
         verifiedAt: Date.now(),
       })
     }
@@ -76,31 +78,31 @@ export const verifyAccess = mutation({
   },
 })
 
-export const getUserCompaniesWithModules = query({
+export const getUserDocumentsWithModules = query({
   args: {},
   handler: async (ctx) => {
     const userId = await auth.getUserId(ctx)
     if (!userId) return []
 
-    const userCompanies = await ctx.db
-      .query("userCompanies")
+    const userDocuments = await ctx.db
+      .query("userDocuments")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
     const result = []
-    for (const uc of userCompanies) {
-      const company = await ctx.db.get(uc.companyId)
-      if (!company) continue
+    for (const ud of userDocuments) {
+      const document = await ctx.db.get(ud.complianceDocumentId)
+      if (!document) continue
 
       const modules = await ctx.db
         .query("trainingModules")
-        .withIndex("by_companyId", (q) => q.eq("companyId", company._id))
+        .withIndex("by_complianceDocumentId", (q) => q.eq("complianceDocumentId", document._id))
         .order("asc")
         .collect()
 
       result.push({
-        companyUuid: company.uuid,
-        companyName: company.name,
+        documentUuid: document.uuid,
+        documentName: document.name,
         modules,
       })
     }
@@ -109,9 +111,9 @@ export const getUserCompaniesWithModules = query({
   },
 })
 
-export const removeUserCompany = mutation({
+export const removeUserDocument = mutation({
   args: {
-    companyUuid: v.string(),
+    documentUuid: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await auth.getUserId(ctx)
@@ -119,18 +121,20 @@ export const removeUserCompany = mutation({
       throw new Error("You must be logged in.")
     }
 
-    const company = await ctx.db
-      .query("companies")
-      .withIndex("by_uuid", (q) => q.eq("uuid", args.companyUuid))
+    const document = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
       .unique()
 
-    if (!company) {
-      throw new Error("Company not found.")
+    if (!document) {
+      throw new Error("Document not found.")
     }
 
     const existing = await ctx.db
-      .query("userCompanies")
-      .withIndex("by_userId_companyId", (q) => q.eq("userId", userId).eq("companyId", company._id))
+      .query("userDocuments")
+      .withIndex("by_userId_documentId", (q) =>
+        q.eq("userId", userId).eq("complianceDocumentId", document._id),
+      )
       .unique()
 
     if (existing) {
@@ -139,13 +143,13 @@ export const removeUserCompany = mutation({
   },
 })
 
-export const getCompanyByUuid = query({
+export const getDocumentByUuid = query({
   args: { uuid: v.string() },
   handler: async (ctx, args) => {
-    const company = await ctx.db
-      .query("companies")
+    const document = await ctx.db
+      .query("complianceDocuments")
       .withIndex("by_uuid", (q) => q.eq("uuid", args.uuid))
       .unique()
-    return company
+    return document
   },
 })

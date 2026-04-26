@@ -20,8 +20,8 @@ import {
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
-export default function RegisterCompanyPage() {
-  const [companyName, setCompanyName] = useState("")
+export default function RegisterDocumentPage() {
+  const [documentName, setDocumentName] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -30,10 +30,10 @@ export default function RegisterCompanyPage() {
   const [copiedField, setCopiedField] = useState<"uuid" | "passphrase" | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const registerCompany = useMutation(api.companies.registerCompany)
-  const generateUploadUrl = useMutation(api.companies.generateUploadUrl)
+  const registerDocument = useMutation(api.documents.registerDocument)
+  const generateUploadUrl = useMutation(api.documents.generateUploadUrl)
 
-  const isSubmitDisabled = !companyName.trim() || files.length === 0 || isUploading || isProcessing
+  const isSubmitDisabled = !documentName.trim() || files.length === 0 || isUploading || isProcessing
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files ?? [])
@@ -78,8 +78,8 @@ export default function RegisterCompanyPage() {
 
       setIsUploading(false)
       setIsProcessing(true)
-      const result = await registerCompany({
-        name: companyName.trim(),
+      const result = await registerDocument({
+        name: documentName.trim(),
         documents: uploadedDocs,
       })
       setCredentials(result)
@@ -105,7 +105,7 @@ export default function RegisterCompanyPage() {
       <header className="mb-8 max-w-2xl">
         <div className="eyebrow mb-2">Step 01 — Onboarding</div>
         <h1 className="font-display" style={{ fontWeight: 500 }}>
-          Register your company.
+          Register a compliance document.
         </h1>
         <p className="mt-3">
           Upload your compliance documentation. We'll process it into searchable training material
@@ -133,14 +133,14 @@ export default function RegisterCompanyPage() {
 
           <div className="p-6 space-y-5">
             <div>
-              <label htmlFor="company-name" className="eyebrow mb-1.5 block">
-                Company name
+              <label htmlFor="document-name" className="eyebrow mb-1.5 block">
+                Document name
               </label>
               <input
-                id="company-name"
+                id="document-name"
                 type="text"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
+                value={documentName}
+                onChange={(e) => setDocumentName(e.target.value)}
                 placeholder="e.g. Acme Corp"
                 className="w-full rounded-md px-3 py-2.5 text-sm outline-none transition-colors"
                 style={{
@@ -275,7 +275,7 @@ export default function RegisterCompanyPage() {
                 cursor: isSubmitDisabled ? "not-allowed" : "pointer",
               }}
             >
-              {isUploading ? "Uploading…" : isProcessing ? "Processing…" : "Register company"}
+              {isUploading ? "Uploading…" : isProcessing ? "Processing…" : "Register document"}
             </button>
           </div>
         </section>
@@ -303,7 +303,7 @@ export default function RegisterCompanyPage() {
                 <div>
                   <div className="flex items-center gap-1.5 eyebrow mb-1.5">
                     <Hash className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Company UUID</span>
+                    <span>Document UUID</span>
                   </div>
                   <div
                     className="flex items-stretch rounded-md overflow-hidden"
@@ -328,7 +328,7 @@ export default function RegisterCompanyPage() {
                           copiedField === "uuid" ? "var(--positive-soft)" : "var(--surface)",
                         color: copiedField === "uuid" ? "var(--positive)" : "var(--ink-soft)",
                       }}
-                      aria-label="Copy Company UUID"
+                      aria-label="Copy Document UUID"
                     >
                       {copiedField === "uuid" ? (
                         <Check className="w-3.5 h-3.5" aria-hidden="true" />

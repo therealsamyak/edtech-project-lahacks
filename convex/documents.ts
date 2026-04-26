@@ -1,10 +1,10 @@
 import { query, mutation } from "./_generated/server"
 import { v } from "convex/values"
 
-export const getAllCompanies = query({
+export const getAllDocuments = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("companies").collect()
+    return await ctx.db.query("complianceDocuments").collect()
   },
 })
 
@@ -46,7 +46,7 @@ export const generateUploadUrl = mutation({
   },
 })
 
-export const registerCompany = mutation({
+export const registerDocument = mutation({
   args: {
     name: v.string(),
     documents: v.array(
@@ -57,16 +57,20 @@ export const registerCompany = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const companyId = await ctx.db.insert("companies", {
+    const suffix = Math.floor(Math.random() * 9000) + 1000
+    const slug = `${args.name.toLowerCase().replace(/\s+/g, "-")}-${suffix}`
+
+    const documentId = await ctx.db.insert("complianceDocuments", {
       name: args.name,
       uuid: crypto.randomUUID(),
+      slug,
       passphrase: generatePassphrase(),
       createdAt: Date.now(),
     })
 
     for (const doc of args.documents) {
       await ctx.db.insert("documents", {
-        companyId,
+        complianceDocumentId: documentId,
         storageId: doc.storageId,
         originalName: doc.originalName,
         uploadedAt: Date.now(),
@@ -74,20 +78,20 @@ export const registerCompany = mutation({
       })
     }
 
-    const company = await ctx.db.get(companyId)
-    console.log(`\n========== COMPANY REGISTERED ==========`)
-    console.log(`Company: ${company!.name}`)
-    console.log(`  UUID:       ${company!.uuid}`)
-    console.log(`  Passphrase: ${company!.passphrase}`)
-    console.log(`=========================================\n`)
+    const document = await ctx.db.get(documentId)
+    console.log(`\n========== DOCUMENT REGISTERED ==========`)
+    console.log(`Document: ${document!.name}`)
+    console.log(`  UUID:       ${document!.uuid}`)
+    console.log(`  Passphrase: ${document!.passphrase}`)
+    console.log(`==========================================\n`)
 
-    return { uuid: company!.uuid, passphrase: company!.passphrase }
+    return { uuid: document!.uuid, passphrase: document!.passphrase }
   },
 })
 
-export const addDocuments = mutation({
+export const addFiles = mutation({
   args: {
-    companyUuid: v.string(),
+    documentUuid: v.string(),
     documents: v.array(
       v.object({
         storageId: v.id("_storage"),
@@ -96,16 +100,16 @@ export const addDocuments = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const company = await ctx.db
-      .query("companies")
-      .withIndex("by_uuid", (q) => q.eq("uuid", args.companyUuid))
+    const document = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
       .unique()
 
-    if (!company) throw new Error("Company not found.")
+    if (!document) throw new Error("Document not found.")
 
     for (const doc of args.documents) {
       await ctx.db.insert("documents", {
-        companyId: company._id,
+        complianceDocumentId: document._id,
         storageId: doc.storageId,
         originalName: doc.originalName,
         uploadedAt: Date.now(),
@@ -113,10 +117,10 @@ export const addDocuments = mutation({
       })
     }
 
-    console.log(`\n========== DOCUMENTS ADDED ==========`)
-    console.log(`Company: ${company.name} (${args.companyUuid})`)
+    console.log(`\n========== FILES ADDED ==========`)
+    console.log(`Document: ${document.name} (${args.documentUuid})`)
     console.log(`  Files:  ${args.documents.length}`)
-    console.log(`======================================\n`)
+    console.log(`=================================\n`)
 
     return { success: true }
   },

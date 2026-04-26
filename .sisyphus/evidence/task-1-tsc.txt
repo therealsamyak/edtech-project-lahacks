@@ -1,0 +1,10 @@
+app/(authenticated)/training/page.tsx(65,54): error TS2339: Property 'removeUserCompany' does not exist on type '{ getModule: FunctionReference<"query", "public", { moduleId: Id<"trainingModules">; }, { _id: Id<"trainingModules">; _creationTime: number; title: string; content: string; complianceDocumentId: Id<...>; ... 5 more ...; order: number; } | null, string | undefined>; ... 4 more ...; getDocumentByUuid: FunctionReferenc...'.
+app/(authenticated)/training/page.tsx(66,47): error TS2551: Property 'getUserCompaniesWithModules' does not exist on type '{ getModule: FunctionReference<"query", "public", { moduleId: Id<"trainingModules">; }, { _id: Id<"trainingModules">; _creationTime: number; title: string; content: string; complianceDocumentId: Id<...>; ... 5 more ...; order: number; } | null, string | undefined>; ... 4 more ...; getDocumentByUuid: FunctionReferenc...'. Did you mean 'getUserDocumentsWithModules'?
+app/(authenticated)/training/page.tsx(74,29): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/(authenticated)/training/page.tsx(97,28): error TS2353: Object literal may only specify known properties, and 'company' does not exist in type '{ document?: string | undefined; uuid: string; passphrase: string; }'.
+app/(authenticated)/training/page.tsx(205,58): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/(authenticated)/training/page.tsx(309,31): error TS7006: Parameter 'group' implicitly has an 'any' type.
+components/VoiceAgent.tsx(34,17): error TS7006: Parameter 'err' implicitly has an 'any' type.
+convex/quiz.ts(33,20): error TS2345: Argument of type '"email"' is not assignable to parameter of type '"by_token" | keyof SystemIndexes'.
+convex/quiz.ts(33,41): error TS2345: Argument of type '"email"' is not assignable to parameter of type '"tokenIdentifier" | "_creationTime" | "_id"'.
+src/services/ai.ts(1,37): error TS2307: Cannot find module 'ai' or its corresponding type declarations.

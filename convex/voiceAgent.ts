@@ -9,16 +9,10 @@ import { api } from "./_generated/api"
  *   <CONVEX_HTTP_URL>/voice-agent/ask
  *
  * The tool's parameters should match the JSON body shape below:
- *   { complianceId: string, question: string }
+ *   { complianceDocumentId: string, question: string }
  *
- * We delegate to `api.assistant.chat`, which is the team's own RAG entry point.
- * Today that action returns a stub string; once Falak wires real retrieval into
- * convex/assistant.ts, this webhook automatically returns grounded answers
- * with no further changes here.
- *
- * `complianceId` is captured and forwarded in the response for traceability,
- * but assistant.chat doesn't currently accept it as an arg. When that signature
- * is widened (per-company scoping), add it to the `runAction` args below.
+ * We delegate to `api.assistant.chat`, which performs RAG retrieval against
+ * the compliance document and returns a grounded answer.
  */
 export const askComplianceWebhook = httpAction(async (ctx, request) => {
   if (request.method !== "POST") {
@@ -32,8 +26,9 @@ export const askComplianceWebhook = httpAction(async (ctx, request) => {
     return jsonResponse({ error: "invalid_json" }, 400)
   }
 
-  const args = body as { complianceId?: unknown; question?: unknown }
-  const complianceId = typeof args.complianceId === "string" ? args.complianceId : undefined
+  const args = body as { complianceDocumentId?: unknown; question?: unknown }
+  const complianceDocumentId =
+    typeof args.complianceDocumentId === "string" ? args.complianceDocumentId : undefined
   const question = typeof args.question === "string" ? args.question : undefined
 
   if (!question) {
@@ -41,8 +36,11 @@ export const askComplianceWebhook = httpAction(async (ctx, request) => {
   }
 
   try {
-    const answer = await ctx.runAction(api.assistant.chat, { message: question })
-    return jsonResponse({ answer, source: "assistant.chat", complianceId })
+    const answer = await ctx.runAction(api.assistant.chat, {
+      message: question,
+      complianceDocumentId,
+    })
+    return jsonResponse({ answer, source: "assistant.chat", complianceDocumentId })
   } catch (err) {
     console.error("[voice-agent webhook] assistant.chat failed:", err)
     return jsonResponse(
@@ -60,7 +58,6 @@ function jsonResponse(payload: unknown, status = 200): Response {
     status,
     headers: {
       "Content-Type": "application/json",
-      // ElevenLabs server tools call cross-origin from their cloud; permissive CORS is fine here.
       "Access-Control-Allow-Origin": "*",
     },
   })

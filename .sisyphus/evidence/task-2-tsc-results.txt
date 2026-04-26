@@ -1,0 +1,20 @@
+.next/dev/types/validator.ts(78,39): error TS2307: Cannot find module '../../../app/(authenticated)/training/[id]/page.js' or its corresponding type declarations.
+.next/types/validator.ts(24,44): error TS2344: Type 'Route' does not satisfy the constraint '"/"'.
+  Type 'LayoutRoutes' is not assignable to type '"/"'.
+    Type '"/training"' is not assignable to type '"/"'.
+.next/types/validator.ts(24,75): error TS2344: Type 'Route' does not satisfy the constraint '"/"'.
+  Type 'LayoutRoutes' is not assignable to type '"/"'.
+    Type '"/training"' is not assignable to type '"/"'.
+app/(authenticated)/training/page.tsx(74,29): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/(authenticated)/training/page.tsx(205,58): error TS7006: Parameter 'c' implicitly has an 'any' type.
+components/VoiceAgent.tsx(3,55): error TS2307: Cannot find module '@elevenlabs/react' or its corresponding type declarations.
+components/VoiceAgent.tsx(34,17): error TS7006: Parameter 'err' implicitly has an 'any' type.
+components/ui/command.tsx(4,45): error TS2307: Cannot find module 'cmdk' or its corresponding type declarations.
+convex/ingest.ts(5,17): error TS2307: Cannot find module 'pdf-parse' or its corresponding type declarations.
+convex/quiz.ts(33,20): error TS2345: Argument of type '"email"' is not assignable to parameter of type '"by_token" | keyof SystemIndexes'.
+convex/quiz.ts(33,41): error TS2345: Argument of type '"email"' is not assignable to parameter of type '"tokenIdentifier" | "_creationTime" | "_id"'.
+convex/voice.ts(4,34): error TS2307: Cannot find module '@elevenlabs/elevenlabs-js' or its corresponding type declarations.
+scripts/eleven-spike.ts(14,40): error TS2307: Cannot find module '@elevenlabs/elevenlabs-js' or its corresponding type declarations.
+src/services/ai.test.ts(1,42): error TS2307: Cannot find module 'vitest' or its corresponding type declarations.
+src/services/ai.ts(1,37): error TS2307: Cannot find module 'ai' or its corresponding type declarations.
+src/services/ai.ts(2,34): error TS2307: Cannot find module '@openrouter/ai-sdk-provider' or its corresponding type declarations.
