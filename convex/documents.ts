@@ -91,6 +91,47 @@ export const registerDocument = mutation({
   },
 })
 
+export const addFiles = mutation({
+  args: {
+    documentUuid: v.string(),
+    documents: v.array(
+      v.object({
+        storageId: v.id("_storage"),
+        originalName: v.string(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const compliance = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
+      .unique()
+
+    if (!compliance) {
+      throw new Error("Compliance document not found")
+    }
+
+    for (const doc of args.documents) {
+      await ctx.db.insert("documents", {
+        complianceDocumentId: compliance._id,
+        storageId: doc.storageId,
+        originalName: doc.originalName,
+        uploadedAt: Date.now(),
+        processingStatus: "pending",
+      })
+
+      await ctx.scheduler.runAfter(0, internal.ingest.ingestComplianceDoc, {
+        complianceId: compliance.slug,
+        passphrase: compliance.passphrase,
+        storageId: doc.storageId,
+        moduleName: doc.originalName,
+      })
+    }
+
+    return { success: true }
+  },
+})
+
 export const updateDocumentStatus = internalMutation({
   args: {
     storageId: v.id("_storage"),

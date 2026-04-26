@@ -12,7 +12,8 @@ import { Check, ChevronLeft, ChevronRight, Award } from "lucide-react"
 export default function QuizPage() {
   const params = useParams<{ id: string; moduleId: string }>()
   const moduleData = useQuery(api.training.getModule, {
-    moduleId: params.moduleId as any,
+    complianceDocumentId: params.id,
+    moduleTitle: params.moduleId,
   })
   const submitQuiz = useMutation(api.quiz.submitQuiz)
 
@@ -54,7 +55,8 @@ export default function QuizPage() {
     setIsSubmitting(true)
     try {
       const res = await submitQuiz({
-        moduleId: params.moduleId as any,
+        complianceDocumentId: params.id,
+        moduleTitle: params.moduleId,
         answers: Object.values(answers),
       })
       setResult(res)

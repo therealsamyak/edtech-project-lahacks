@@ -1,38 +1,62 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useParams } from "next/navigation"
 import { useAction } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Bot, Send, X, MessageCircle } from "lucide-react"
+import { Bot, Send, X, MessageCircle, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { VoiceAgent } from "@/components/VoiceAgent"
 
 type Message = { role: "user" | "assistant"; content: string }
 
-export function AssistantPopover() {
-  const [isOpen, setIsOpen] = useState(false)
+export function FloatingButtonGroup() {
+  const [chatOpen, setChatOpen] = useState(false)
+  const [voiceOpen, setVoiceOpen] = useState(false)
+  const chatTriggerRef = useRef<HTMLButtonElement>(null)
+  const voiceTriggerRef = useRef<HTMLButtonElement>(null)
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
   const chat = useAction(api.assistant.chat)
 
+  const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
+  const params = useParams<{ id?: string }>()
+  const complianceId = typeof params?.id === "string" ? params.id : undefined
+
   useEffect(() => {
-    if (!isOpen) return
+    if (!chatOpen && !voiceOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setIsOpen(false)
-        triggerRef.current?.focus()
+        if (voiceOpen) {
+          setVoiceOpen(false)
+          voiceTriggerRef.current?.focus()
+        }
+        if (chatOpen) {
+          setChatOpen(false)
+          chatTriggerRef.current?.focus()
+        }
       }
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [isOpen])
+  }, [chatOpen, voiceOpen])
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight })
   }, [messages])
+
+  const openChat = () => {
+    setChatOpen((prev) => !prev)
+    setVoiceOpen(false)
+  }
+  const openVoice = () => {
+    setVoiceOpen((prev) => !prev)
+    setChatOpen(false)
+  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,19 +77,86 @@ export function AssistantPopover() {
 
   return (
     <>
-      <Button
-        ref={triggerRef}
-        onClick={() => setIsOpen(!isOpen)}
-        size="icon"
-        className="fixed bottom-10 right-6 z-40 rounded-full bg-accent text-accent-foreground hover:bg-accent/90 shadow-lg size-12"
-        aria-label="Open training assistant"
-        aria-expanded={isOpen}
-        aria-controls="assistant-panel"
-      >
-        <MessageCircle className="size-6" aria-hidden="true" />
-      </Button>
+      <div className="fixed bottom-6 right-6 z-40 flex items-center gap-2">
+        <Button
+          ref={voiceTriggerRef}
+          onClick={openVoice}
+          size="icon"
+          className={`rounded-full shadow-lg size-12 ${voiceOpen ? "bg-accent/90 ring-2 ring-accent" : "bg-accent text-accent-foreground hover:bg-accent/90"}`}
+          aria-label="Open voice tutor"
+          aria-expanded={voiceOpen}
+          aria-controls="voice-agent-panel"
+        >
+          <Mic className="size-5" aria-hidden="true" />
+        </Button>
 
-      {isOpen && (
+        <Button
+          ref={chatTriggerRef}
+          onClick={openChat}
+          size="icon"
+          className={`rounded-full shadow-lg size-12 ${chatOpen ? "bg-accent/90 ring-2 ring-accent" : "bg-accent text-accent-foreground hover:bg-accent/90"}`}
+          aria-label="Open training assistant"
+          aria-expanded={chatOpen}
+          aria-controls="assistant-panel"
+        >
+          <MessageCircle className="size-5" aria-hidden="true" />
+        </Button>
+      </div>
+
+      {voiceOpen && (
+        <div
+          id="voice-agent-panel"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="voice-agent-heading"
+          className="fixed right-6 z-50 flex flex-col rounded-lg border border-line bg-surface shadow-lg"
+          style={{
+            width: "min(320px, calc(100vw - 2rem))",
+            padding: "1rem",
+            bottom: "calc(1.5rem + 3rem + 0.75rem)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Mic className="size-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
+              <h3
+                id="voice-agent-heading"
+                className="font-display m-0"
+                style={{ fontSize: "0.95rem", fontWeight: 500 }}
+              >
+                Voice tutor
+              </h3>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => {
+                setVoiceOpen(false)
+                voiceTriggerRef.current?.focus()
+              }}
+              aria-label="Close voice tutor"
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+
+          {agentId ? (
+            <VoiceAgent agentId={agentId} complianceId={complianceId} />
+          ) : (
+            <div className="text-sm" style={{ color: "var(--ink-soft)" }}>
+              <p className="mb-2" style={{ fontWeight: 500 }}>
+                Voice tutor not configured
+              </p>
+              <p className="text-xs" style={{ color: "var(--muted)" }}>
+                Set <code>NEXT_PUBLIC_ELEVENLABS_AGENT_ID</code> in <code>.env.local</code>. Setup
+                steps in <code>docs/voice-agent.md</code>.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {chatOpen && (
         <div
           id="assistant-panel"
           role="dialog"
@@ -75,7 +166,7 @@ export function AssistantPopover() {
           style={{
             width: "min(380px, calc(100vw - 2rem))",
             height: "min(520px, calc(100vh - 6rem))",
-            bottom: "calc(2.5rem + 3rem + 0.5rem)",
+            bottom: "calc(1.5rem + 3rem + 0.75rem)",
           }}
         >
           <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -93,8 +184,8 @@ export function AssistantPopover() {
               variant="ghost"
               size="icon-xs"
               onClick={() => {
-                setIsOpen(false)
-                triggerRef.current?.focus()
+                setChatOpen(false)
+                chatTriggerRef.current?.focus()
               }}
               aria-label="Close assistant"
             >

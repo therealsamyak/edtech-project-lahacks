@@ -48,6 +48,17 @@ export const ingestComplianceDoc = internalAction({
       },
     ]
 
+    await ctx.runMutation(internal.compliance.saveComplianceChunks, {
+      complianceDocumentId: compliance.uuid,
+      chunks: processed,
+    })
+
+    try {
+      await ai.generateQuiz(fullText.slice(0, 8000))
+    } catch (e) {
+      console.error(`Quiz generation failed for module ${moduleName}:`, e)
+    }
+
     await ctx.runMutation(internal.documents.updateDocumentStatus, {
       storageId: args.storageId,
       status: "completed",

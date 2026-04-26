@@ -28,7 +28,8 @@ type AudioState = "idle" | "loading" | "playing" | "error"
 export default function ModuleContentPage() {
   const params = useParams<{ id: string; moduleId: string }>()
   const moduleData = useQuery(api.training.getModule, {
-    moduleId: params.moduleId as any,
+    complianceDocumentId: params.id,
+    moduleTitle: params.moduleId,
   })
   const synthesize = useAction(api.voice.synthesize)
   const audioRef = useRef<HTMLAudioElement | null>(null)
