@@ -8,14 +8,15 @@
  * @module
  */
 
-import type * as ai_service from "../ai_service.js";
 import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
-import type * as companies from "../companies.js";
 import type * as compliance from "../compliance.js";
+import type * as debug from "../debug.js";
+import type * as documents from "../documents.js";
 import type * as http from "../http.js";
 import type * as ingest from "../ingest.js";
 import type * as ingestion from "../ingestion.js";
+import type * as ingestionHelpers from "../ingestionHelpers.js";
 import type * as quiz from "../quiz.js";
 import type * as seed from "../seed.js";
 import type * as training from "../training.js";
@@ -30,14 +31,15 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  ai_service: typeof ai_service;
   assistant: typeof assistant;
   auth: typeof auth;
-  companies: typeof companies;
   compliance: typeof compliance;
+  debug: typeof debug;
+  documents: typeof documents;
   http: typeof http;
   ingest: typeof ingest;
   ingestion: typeof ingestion;
+  ingestionHelpers: typeof ingestionHelpers;
   quiz: typeof quiz;
   seed: typeof seed;
   training: typeof training;

@@ -1,35 +1,24 @@
 import { v } from "convex/values"
 import { mutation, query } from "./_generated/server"
+import { getAuthUserId } from "@convex-dev/auth/server"
 
 export const storeUser = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) {
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) {
       throw new Error("Unauthenticated")
     }
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique()
+    const user = await ctx.db.get(userId)
 
-    if (user !== null) {
-      if (user.name !== identity.name || user.email !== identity.email) {
-        await ctx.db.patch(user._id, {
-          name: identity.name,
-          email: identity.email,
-        })
-      }
-      return user._id
+    if (user !== null && !user.progress) {
+      await ctx.db.patch(userId, {
+        progress: {},
+      })
     }
 
-    return await ctx.db.insert("users", {
-      name: identity.name!,
-      email: identity.email!,
-      tokenIdentifier: identity.tokenIdentifier,
-      progress: {},
-    })
+    return userId
   },
 })
 
@@ -44,25 +33,22 @@ export const updateModuleProgress = mutation({
       throw new Error("Score must be between 0 and 1")
     }
 
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthenticated")
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) throw new Error("Unauthenticated")
 
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique()
-
+    const user = await ctx.db.get(userId)
     if (!user) throw new Error("User not found")
 
     const fullProgress = user.progress ?? {}
-    const complianceMap = fullProgress[args.complianceDocumentId] ?? {}
+    const complianceMap = (fullProgress[args.complianceDocumentId] as Record<string, number>) ?? {}
 
     const existingScore = complianceMap[args.module] ?? 0
+
     if (args.score > existingScore) {
       complianceMap[args.module] = args.score
       fullProgress[args.complianceDocumentId] = complianceMap
 
-      await ctx.db.patch(user._id, {
+      await ctx.db.patch(userId, {
         progress: fullProgress,
       })
     }
@@ -72,12 +58,9 @@ export const updateModuleProgress = mutation({
 export const getMyProfile = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) return null
+    const userId = await getAuthUserId(ctx)
+    if (userId === null) return null
 
-    return await ctx.db
-      .query("users")
-      .withIndex("by_token", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
-      .unique()
+    return await ctx.db.get(userId)
   },
 })

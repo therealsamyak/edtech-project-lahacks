@@ -1,11 +1,11 @@
 "use node"
 import { v } from "convex/values"
-import { action } from "./_generated/server"
+import { action, internalAction } from "./_generated/server"
 import { internal } from "./_generated/api"
 import pdf from "pdf-parse"
 import { ComplianceAIService } from "../src/services/ai"
 
-export const ingestComplianceDoc = action({
+export const ingestComplianceDoc = internalAction({
   args: {
     complianceId: v.string(),
     passphrase: v.string(),
@@ -48,9 +48,9 @@ export const ingestComplianceDoc = action({
       },
     ]
 
-    await ctx.runMutation(internal.compliance.saveComplianceChunks, {
-      complianceDocumentId: args.complianceId,
-      chunks: processed,
+    await ctx.runMutation(internal.documents.updateDocumentStatus, {
+      storageId: args.storageId,
+      status: "completed",
     })
 
     return {
