@@ -9,14 +9,11 @@ export default defineSchema({
   users: defineTable({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    tokenIdentifier: v.string(),
     progress: v.optional(v.record(v.string(), v.record(v.string(), v.number()))),
     emailVerificationTime: v.optional(v.number()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
-  })
-    .index("by_token", ["tokenIdentifier"])
-    .index("by_email", ["email"]),
+  }).index("by_email", ["email"]),
   complianceDocuments: defineTable({
     name: v.string(),
     uuid: v.string(),
@@ -67,7 +64,8 @@ export default defineSchema({
     processingStatus: v.optional(v.string()),
   })
     .index("by_complianceDocumentId", ["complianceDocumentId"])
-    .index("by_complianceDocumentId_status", ["complianceDocumentId", "processingStatus"]),
+    .index("by_complianceDocumentId_status", ["complianceDocumentId", "processingStatus"])
+    .index("by_storageId", ["storageId"]),
   documentChunks: defineTable({
     complianceDocumentId: v.string(),
     text: v.string(),

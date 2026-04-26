@@ -1,5 +1,6 @@
-import { query, mutation } from "./_generated/server"
+import { query, mutation, internalMutation } from "./_generated/server"
 import { v } from "convex/values"
+import { internal } from "./_generated/api"
 
 export const getAllDocuments = query({
   args: {},
@@ -59,12 +60,13 @@ export const registerDocument = mutation({
   handler: async (ctx, args) => {
     const suffix = Math.floor(Math.random() * 9000) + 1000
     const slug = `${args.name.toLowerCase().replace(/\s+/g, "-")}-${suffix}`
+    const passphrase = generatePassphrase()
 
     const documentId = await ctx.db.insert("complianceDocuments", {
       name: args.name,
       uuid: crypto.randomUUID(),
       slug,
-      passphrase: generatePassphrase(),
+      passphrase,
       createdAt: Date.now(),
     })
 
@@ -76,52 +78,31 @@ export const registerDocument = mutation({
         uploadedAt: Date.now(),
         processingStatus: "pending",
       })
-    }
 
-    const document = await ctx.db.get(documentId)
-    console.log(`\n========== DOCUMENT REGISTERED ==========`)
-    console.log(`Document: ${document!.name}`)
-    console.log(`  UUID:       ${document!.uuid}`)
-    console.log(`  Passphrase: ${document!.passphrase}`)
-    console.log(`==========================================\n`)
-
-    return { uuid: document!.uuid, passphrase: document!.passphrase }
-  },
-})
-
-export const addFiles = mutation({
-  args: {
-    documentUuid: v.string(),
-    documents: v.array(
-      v.object({
-        storageId: v.id("_storage"),
-        originalName: v.string(),
-      }),
-    ),
-  },
-  handler: async (ctx, args) => {
-    const document = await ctx.db
-      .query("complianceDocuments")
-      .withIndex("by_uuid", (q) => q.eq("uuid", args.documentUuid))
-      .unique()
-
-    if (!document) throw new Error("Document not found.")
-
-    for (const doc of args.documents) {
-      await ctx.db.insert("documents", {
-        complianceDocumentId: document._id,
+      await ctx.scheduler.runAfter(0, internal.ingest.ingestComplianceDoc, {
+        complianceId: slug,
+        passphrase: passphrase,
         storageId: doc.storageId,
-        originalName: doc.originalName,
-        uploadedAt: Date.now(),
-        processingStatus: "pending",
+        moduleName: doc.originalName,
       })
     }
 
-    console.log(`\n========== FILES ADDED ==========`)
-    console.log(`Document: ${document.name} (${args.documentUuid})`)
-    console.log(`  Files:  ${args.documents.length}`)
-    console.log(`=================================\n`)
+    return { uuid: (await ctx.db.get(documentId))!.uuid, passphrase }
+  },
+})
 
-    return { success: true }
+export const updateDocumentStatus = internalMutation({
+  args: {
+    storageId: v.id("_storage"),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const doc = await ctx.db
+      .query("documents")
+      .withIndex("by_storageId", (q) => q.eq("storageId", args.storageId))
+      .unique()
+    if (doc) {
+      await ctx.db.patch(doc._id, { processingStatus: args.status })
+    }
   },
 })
