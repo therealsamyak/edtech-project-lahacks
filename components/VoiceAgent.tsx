@@ -2,7 +2,7 @@
 
 import { ConversationProvider, useConversation } from "@elevenlabs/react"
 import { Mic, MicOff } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 
 interface VoiceAgentProps {
@@ -45,11 +45,22 @@ export function VoiceAgent({ agentId, complianceId, moduleContext }: VoiceAgentP
 
 function VoiceAgentControls({ agentId, complianceId, moduleContext }: VoiceAgentProps) {
   const conversation = useConversation()
-  const { status, isSpeaking, startSession, endSession } = conversation
+  const { status, isSpeaking, startSession, endSession, sendContextualUpdate } = conversation
   const [error, setError] = useState<string | null>(null)
+  const hasSentContext = useRef(false)
 
   const isConnected = status === "connected"
   const isConnecting = status === "connecting"
+
+  useEffect(() => {
+    if (isConnected && moduleContext && !hasSentContext.current) {
+      hasSentContext.current = true
+      sendContextualUpdate(moduleContext)
+    }
+    if (!isConnected) {
+      hasSentContext.current = false
+    }
+  }, [isConnected, moduleContext, sendContextualUpdate])
 
   const handleStart = async () => {
     setError(null)

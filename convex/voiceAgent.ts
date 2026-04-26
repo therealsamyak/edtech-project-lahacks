@@ -26,10 +26,15 @@ export const askComplianceWebhook = httpAction(async (ctx, request) => {
     return jsonResponse({ error: "invalid_json" }, 400)
   }
 
-  const args = body as { complianceDocumentId?: unknown; question?: unknown }
+  const args = body as {
+    complianceDocumentId?: unknown
+    question?: unknown
+    module_context?: unknown
+  }
   const complianceDocumentId =
     typeof args.complianceDocumentId === "string" ? args.complianceDocumentId : undefined
   const question = typeof args.question === "string" ? args.question : undefined
+  const moduleContext = typeof args.module_context === "string" ? args.module_context : undefined
 
   if (!question) {
     return jsonResponse({ error: "missing_args", required: ["question"] }, 400)
@@ -39,6 +44,7 @@ export const askComplianceWebhook = httpAction(async (ctx, request) => {
     const answer = await ctx.runAction(api.assistant.chat, {
       message: question,
       complianceDocumentId,
+      systemContext: moduleContext,
     })
     return jsonResponse({ answer, source: "assistant.chat", complianceDocumentId })
   } catch (err) {
