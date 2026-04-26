@@ -61,3 +61,33 @@ export const ingestComplianceDoc = action({
     }
   },
 })
+
+export const askQuestion = action({
+  args: {
+    complianceId: v.string(),
+    question: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
+
+    const questionEmbedding = await ai.generateEmbedding(args.question)
+
+    const searchResults = await ctx.vectorSearch("complianceDocs", "by_embedding", {
+      vector: questionEmbedding,
+      filter: (q) => q.eq("complianceId", args.complianceId),
+      limit: 5,
+    })
+
+    if (searchResults.length === 0) {
+      return { answer: "I couldn't find any relevant sections in the document.", model: "N/A" }
+    }
+
+    const chunks: string[] = await ctx.runQuery(internal.compliance.getChunksByIds, {
+      ids: searchResults.map((r) => r._id),
+    })
+
+    const context = chunks.join("\n\n")
+
+    return await ai.generateComplianceAction(context, args.question)
+  },
+})
