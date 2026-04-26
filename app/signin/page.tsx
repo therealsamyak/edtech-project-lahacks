@@ -13,6 +13,11 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // Signup is disabled — log for debug
+  const handleSignUpAttempt = () => {
+    console.log("[DEBUG] Signup is currently disabled")
+  }
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-paper">
       <aside className="hidden lg:flex flex-col justify-between px-12 py-12 border-r border-line">
@@ -68,6 +73,11 @@ export default function SignIn() {
             e.preventDefault()
             setLoading(true)
             setError(null)
+            if (flow === "signUp") {
+              handleSignUpAttempt()
+              setLoading(false)
+              return
+            }
             const formData = new FormData(e.target as HTMLFormElement)
             formData.set("flow", flow)
             void signIn("password", formData)
@@ -153,19 +163,6 @@ export default function SignIn() {
                 </>
               )}
             </Button>
-          </div>
-
-          <div className="flex items-center justify-center gap-2 text-sm mt-6">
-            <span className="text-muted-foreground">
-              {flow === "signIn" ? "Don't have an account?" : "Already have an account?"}
-            </span>
-            <button
-              type="button"
-              className="text-accent font-medium underline underline-offset-2 hover:no-underline cursor-pointer transition-all"
-              onClick={() => setFlow(flow === "signIn" ? "signUp" : "signIn")}
-            >
-              {flow === "signIn" ? "Sign up" : "Sign in"}
-            </button>
           </div>
 
           {error && (
