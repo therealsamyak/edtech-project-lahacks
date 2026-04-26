@@ -8,6 +8,17 @@ export const storeUser = mutation({
     if (userId === null) {
       throw new Error("Unauthenticated")
     }
+
+    const existing = await ctx.db.get(userId)
+    const identity = await ctx.auth.getUserIdentity()
+
+    if (identity && (!existing?.email || !existing?.name)) {
+      await ctx.db.patch(userId, {
+        ...(identity.email ? { email: identity.email } : {}),
+        ...(identity.name ? { name: identity.name } : {}),
+      })
+    }
+
     return userId
   },
 })

@@ -52,8 +52,8 @@ export default function QuizPage() {
     setIsSubmitting(true)
     try {
       const res = await submitQuiz({
-        complianceDocumentId: params.id,
-        moduleTitle: params.moduleId,
+        complianceDocumentId: decodeURIComponent(params.id),
+        moduleTitle: decodeURIComponent(params.moduleId),
         answers: Object.values(answers),
       })
       setResult(res)

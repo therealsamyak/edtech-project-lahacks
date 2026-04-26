@@ -72,10 +72,10 @@ const QUIZ_SYSTEM_PROMPT = [
 const MODULE_SYSTEM_PROMPT = [
   "You are a senior compliance training module designer.",
   "Return valid JSON only with no markdown, prose, or code fences.",
-  "Generate a structured training module from the provided document text.",
-  "The module must include: title, description, content (detailed summary), duration estimate, topics array, highlights array, quizQuestions array, and order.",
+  "Generate exactly 3 training modules from the provided document text, covering different aspects/sections.",
+  "Each module must include: title, description, content (detailed summary), duration estimate, topics array, highlights array, quizQuestions array, and order.",
   "Each quiz question must include: question (string), options (array of 4 strings), correctIndex (0-based integer indicating the correct option).",
-  "Generate exactly 3 to 5 quiz questions.",
+  "Generate exactly 3 to 5 quiz questions per module.",
   "Do NOT include a correctAnswer string field — use correctIndex only.",
 ].join(" ")
 
@@ -209,7 +209,7 @@ export class ComplianceAIService {
     return normalizeQuizItems(parsed)
   }
 
-  async generateModule(fullText: string): Promise<ModuleItem> {
+  async generateModules(fullText: string): Promise<ModuleItem[]> {
     // Note: text truncated to 8000 chars due to model context limits
     const truncated = fullText.slice(0, 8000)
 
@@ -220,11 +220,12 @@ export class ComplianceAIService {
         "Document Text:",
         truncated.trim(),
         "",
-        "Return this exact JSON shape:",
-        '{"title":"...","description":"...","content":"...","duration":"...","topics":["..."],"highlights":["..."],"quizQuestions":[{"question":"...","options":["A","B","C","D"],"correctIndex":0}],"order":0}',
+        "Return a JSON array with this exact shape for each module:",
+        '[{"title":"...","description":"...","content":"...","duration":"...","topics":["..."],"highlights":["..."],"quizQuestions":[{"question":"...","options":["A","B","C","D"],"correctIndex":0}],"order":0}]',
         "",
         "Rules:",
-        "- Generate 3 to 5 quiz questions.",
+        "- Generate exactly 3 modules covering different aspects of the document.",
+        "- Each module should have 3 to 5 quiz questions.",
         "- Each question must have exactly 4 options.",
         "- `correctIndex` is a 0-based integer indicating the correct option.",
         "- Do NOT include a `correctAnswer` string field.",
@@ -239,7 +240,7 @@ export class ComplianceAIService {
     }
 
     const parsed = safeJsonParse(rawText)
-    return normalizeModule(parsed)
+    return normalizeModules(parsed)
   }
 
   async generateEmbedding(text: string): Promise<number[]> {
@@ -315,7 +316,21 @@ function parseQuizItem(item: unknown): QuizItem {
   }
 }
 
-function normalizeModule(payload: unknown): ModuleItem {
+function normalizeModules(payload: unknown): ModuleItem[] {
+  // If the model returned a single object (not array), wrap for backwards compatibility
+  let items: unknown[]
+  if (Array.isArray(payload)) {
+    items = payload
+  } else if (typeof payload === "object" && payload !== null) {
+    items = [payload]
+  } else {
+    throw new Error("Module response JSON must be an object or array.")
+  }
+
+  return items.map((item, index) => parseSingleModule(item, index))
+}
+
+function parseSingleModule(payload: unknown, index: number): ModuleItem {
   if (typeof payload !== "object" || payload === null) {
     throw new Error("Module response JSON must be an object.")
   }
@@ -360,7 +375,7 @@ function normalizeModule(payload: unknown): ModuleItem {
     topics: topics.map((t) => String(t).trim()),
     highlights: highlights.map((h) => String(h).trim()),
     quizQuestions: quizQuestions.map(parseModuleQuizQuestion),
-    order: 0,
+    order: index,
   }
 }
 
