@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PageLoader } from "@/components/PageLoader"
+import { MCPSetupDialog } from "@/components/MCPSetupDialog"
 import {
   Dialog,
   DialogContent,
@@ -344,119 +345,122 @@ export default function TrainingAccessPage() {
             Your training modules.
           </h1>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <Button variant="outline" onClick={() => setDialogOpen(true)}>
-            <Plus className="w-4 h-4" />
-            <span>Add document</span>
-          </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <MCPSetupDialog />
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Button variant="outline" onClick={() => setDialogOpen(true)}>
+              <Plus className="w-4 h-4" />
+              <span>Add document</span>
+            </Button>
 
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <div className="eyebrow mb-1">Access</div>
-              <DialogTitle className="font-display" style={{ fontWeight: 500 }}>
-                Document credentials
-              </DialogTitle>
-              <DialogDescription>
-                Enter the credentials your administrator issued. Once verified, this document will
-                appear in your training hub.
-              </DialogDescription>
-            </DialogHeader>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <div className="eyebrow mb-1">Access</div>
+                <DialogTitle className="font-display" style={{ fontWeight: 500 }}>
+                  Document credentials
+                </DialogTitle>
+                <DialogDescription>
+                  Enter the credentials your administrator issued. Once verified, this document will
+                  appear in your training hub.
+                </DialogDescription>
+              </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="document-select"
-                  className="block text-sm mb-1.5"
-                  style={{ color: "var(--ink)" }}
-                >
-                  Document <span style={{ color: "var(--muted)" }}>(optional)</span>
-                </label>
-                <Combobox
-                  items={allDocuments ?? []}
-                  onValueChange={(v) => {
-                    const selected = allDocuments?.find((c: { name: string }) => c.name === v)
-                    if (selected) {
-                      setDocument(selected.name)
-                      setUuid(selected.uuid)
-                    }
-                  }}
-                >
-                  <ComboboxInput
-                    id="document-select"
-                    placeholder="Select a document…"
-                    className="h-9 bg-input-background border-line"
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="document-select"
+                    className="block text-sm mb-1.5"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    Document <span style={{ color: "var(--muted)" }}>(optional)</span>
+                  </label>
+                  <Combobox
+                    items={allDocuments ?? []}
+                    onValueChange={(v) => {
+                      const selected = allDocuments?.find((c: { name: string }) => c.name === v)
+                      if (selected) {
+                        setDocument(selected.name)
+                        setUuid(selected.uuid)
+                      }
+                    }}
+                  >
+                    <ComboboxInput
+                      id="document-select"
+                      placeholder="Select a document…"
+                      className="h-9 bg-input-background border-line"
+                    />
+                    <ComboboxContent>
+                      <ComboboxEmpty>No documents found.</ComboboxEmpty>
+                      <ComboboxList>
+                        {(item) => (
+                          <ComboboxItem key={item._id} value={item.name}>
+                            {item.name}
+                          </ComboboxItem>
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="uuid"
+                    className="block text-sm mb-1.5"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    Document UUID
+                  </label>
+                  <Input
+                    id="uuid"
+                    type="text"
+                    value={uuid}
+                    onChange={(e) => setUuid(e.target.value)}
+                    placeholder="comp-a7f3e9d2-…"
+                    className="h-9 font-mono bg-input-background border-line"
+                    required
                   />
-                  <ComboboxContent>
-                    <ComboboxEmpty>No documents found.</ComboboxEmpty>
-                    <ComboboxList>
-                      {(item) => (
-                        <ComboboxItem key={item._id} value={item.name}>
-                          {item.name}
-                        </ComboboxItem>
-                      )}
-                    </ComboboxList>
-                  </ComboboxContent>
-                </Combobox>
-              </div>
+                </div>
 
-              <div>
-                <label
-                  htmlFor="uuid"
-                  className="block text-sm mb-1.5"
-                  style={{ color: "var(--ink)" }}
-                >
-                  Document UUID
-                </label>
-                <Input
-                  id="uuid"
-                  type="text"
-                  value={uuid}
-                  onChange={(e) => setUuid(e.target.value)}
-                  placeholder="comp-a7f3e9d2-…"
-                  className="h-9 font-mono bg-input-background border-line"
-                  required
-                />
-              </div>
+                <div>
+                  <label
+                    htmlFor="passphrase"
+                    className="block text-sm mb-1.5"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    Passphrase
+                  </label>
+                  <Input
+                    id="passphrase"
+                    type="password"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    placeholder="Enter your passphrase"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label
-                  htmlFor="passphrase"
-                  className="block text-sm mb-1.5"
-                  style={{ color: "var(--ink)" }}
-                >
-                  Passphrase
-                </label>
-                <Input
-                  id="passphrase"
-                  type="password"
-                  value={passphrase}
-                  onChange={(e) => setPassphrase(e.target.value)}
-                  placeholder="Enter your passphrase"
-                  required
-                />
-              </div>
+                {error && (
+                  <p className="text-sm" style={{ color: "var(--destructive)" }}>
+                    {error}
+                  </p>
+                )}
 
-              {error && (
-                <p className="text-sm" style={{ color: "var(--destructive)" }}>
-                  {error}
-                </p>
-              )}
-
-              <DialogFooter>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    "Verifying…"
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>Access training</span>
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter>
+                  <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                      "Verifying…"
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>Access training</span>
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </header>
 
       {!userDocuments ? (
