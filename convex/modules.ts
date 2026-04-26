@@ -1,52 +1,5 @@
 import { v } from "convex/values"
-import { mutation, action, query, internalQuery, internalMutation } from "./_generated/server"
-import { internal } from "./_generated/api"
-import * as bcrypt from "bcryptjs"
-
-export const createCompliance = mutation({
-  args: { name: v.string() },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error("Unauthenticated")
-
-    const suffix = Math.floor(Math.random() * 9000) + 1000
-    const complianceId = `${args.name.toLowerCase().replace(/\s+/g, "-")}-${suffix}`
-
-    const existing = await ctx.db
-      .query("compliances")
-      .withIndex("by_compliance_id", (q) => q.eq("complianceId", complianceId))
-      .unique()
-
-    if (existing) return existing._id
-
-    const charset = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-    let rawPassphrase = ""
-    for (let i = 0; i < 12; i++) {
-      rawPassphrase += charset.charAt(Math.floor(Math.random() * charset.length))
-    }
-
-    const hashed = bcrypt.hashSync(rawPassphrase, 10)
-
-    await ctx.db.insert("compliances", {
-      name: args.name,
-      complianceId,
-      passphrase: hashed,
-      createdBy: identity.tokenIdentifier,
-    })
-
-    return { complianceId, rawPassphrase }
-  },
-})
-
-export const getComplianceRecord = internalQuery({
-  args: { complianceId: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("compliances")
-      .withIndex("by_compliance_id", (q) => q.eq("complianceId", args.complianceId))
-      .unique()
-  },
-})
+import { query, internalQuery, internalMutation } from "./_generated/server"
 
 export const saveComplianceChunks = internalMutation({
   args: {
@@ -118,14 +71,34 @@ export const getModulesByCompliance = query({
   },
 })
 
-export const getComplianceOwner = query({
-  args: { complianceId: v.string() },
-  handler: async (ctx, args) => {
-    const record = await ctx.db
-      .query("compliances")
-      .withIndex("by_compliance_id", (q) => q.eq("complianceId", args.complianceId))
-      .unique()
+export const getModuleContent = query({
+  args: {
+    complianceId: v.string(),
+    module: v.string(),
+  },
+  handler: async (ctx, args): Promise<string[]> => {
+    const chunks = await ctx.db
+      .query("complianceDocs")
+      .withIndex("by_module", (q) =>
+        q.eq("complianceId", args.complianceId).eq("module", args.module),
+      )
+      .collect()
 
-    return record ? { id: record.createdBy } : null
+    return chunks.map((c) => c.text)
+  },
+})
+
+export const getModuleQuiz = query({
+  args: {
+    complianceId: v.string(),
+    module: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("moduleQuizzes")
+      .withIndex("by_compliance_module", (q) =>
+        q.eq("complianceId", args.complianceId).eq("module", args.module),
+      )
+      .unique()
   },
 })

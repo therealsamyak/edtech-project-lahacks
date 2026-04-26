@@ -1,21 +1,53 @@
 {
-  "active_plan": "/Users/skakatur/Desktop/CodingStuff/edtech-project-lahacks/.sisyphus/plans/register-multi-upload.md",
-  "started_at": "2026-04-25T21:59:14.516Z",
-  "session_ids": ["ses_239589325ffeoO0Oc5vFXQLWH2"],
+  "active_plan": "/Users/skakatur/Desktop/CodingStuff/edtech-project-lahacks/.sisyphus/plans/tie-backend-together.md",
+  "started_at": "2026-04-26T01:04:30.097Z",
+  "session_ids": [
+    "ses_238aef6a0ffe74h36iA695Ksga",
+    "ses_238aebea6ffeV4fcqgGUwy7sFy",
+    "ses_238aebea1ffeKu9olfnIHfQm5T",
+    "ses_23898b3a0ffeF1rMpZ6cVZsFlV",
+    "ses_23898b39bffevcSCrt6e1dj2Pq",
+    "ses_23898b393ffeuzoxblS4Ku4HvB",
+    "ses_23898b39effeau337f3AG4j0dH"
+  ],
   "session_origins": {
-    "ses_239589325ffeoO0Oc5vFXQLWH2": "direct"
+    "ses_238aef6a0ffe74h36iA695Ksga": "direct",
+    "ses_238aebea6ffeV4fcqgGUwy7sFy": "appended",
+    "ses_238aebea1ffeKu9olfnIHfQm5T": "appended",
+    "ses_23898b3a0ffeF1rMpZ6cVZsFlV": "appended",
+    "ses_23898b39bffevcSCrt6e1dj2Pq": "appended",
+    "ses_23898b393ffeuzoxblS4Ku4HvB": "appended",
+    "ses_23898b39effeau337f3AG4j0dH": "appended"
   },
-  "plan_name": "register-multi-upload",
+  "plan_name": "tie-backend-together",
   "agent": "atlas",
   "task_sessions": {
     "todo:1": {
       "task_key": "todo:1",
       "task_label": "1",
-      "task_title": "Add `documents` table to Convex schema",
-      "session_id": "ses_239582810ffeaTrZMHopc1xSTd",
+      "task_title": "Schema Cleanup — Drop Compliances, Add moduleQuizzes Table",
+      "session_id": "ses_238ad7d7fffePcFsXWQ4zdcYkT",
       "agent": "Sisyphus-Junior",
       "category": "quick",
-      "updated_at": "2026-04-25T22:00:42.641Z"
+      "updated_at": "2026-04-26T01:06:10.905Z"
+    },
+    "todo:7": {
+      "task_key": "todo:7",
+      "task_label": "7",
+      "task_title": "Clean Up Dead Code",
+      "session_id": "ses_238a40743ffe47IYqBoUY2gEcJ",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-26T01:25:54.125Z"
+    },
+    "final-wave:f1": {
+      "task_key": "final-wave:f1",
+      "task_label": "F1",
+      "task_title": "**Plan Compliance Audit** — `oracle`",
+      "session_id": "ses_23894adb4ffeyvDixyacMnU6qN",
+      "agent": "Sisyphus-Junior",
+      "category": "quick",
+      "updated_at": "2026-04-26T01:42:30.629Z"
     }
   }
 }

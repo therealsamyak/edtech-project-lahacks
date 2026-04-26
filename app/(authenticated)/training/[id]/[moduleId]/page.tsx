@@ -30,6 +30,14 @@ export default function ModuleContentPage() {
   const moduleData = useQuery(api.training.getModule, {
     moduleId: params.moduleId as any,
   })
+  const moduleContent = useQuery(
+    api.modules.getModuleContent,
+    moduleData ? { complianceId: params.id, module: moduleData.title } : "skip",
+  )
+  const quizData = useQuery(
+    api.modules.getModuleQuiz,
+    moduleData ? { complianceId: params.id, module: moduleData.title } : "skip",
+  )
   const synthesize = useAction(api.voice.synthesize)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
@@ -58,7 +66,7 @@ export default function ModuleContentPage() {
     if (!moduleData) return
     setAudioState("loading")
     try {
-      const result = await synthesize({ text: moduleData.content })
+      const result = await synthesize({ text: contentText ?? moduleData.content })
       const url = `data:${result.mimeType};base64,${result.base64}`
       setAudioUrl(url)
       // Wait one tick for the <audio src> to bind, then play.
@@ -72,7 +80,7 @@ export default function ModuleContentPage() {
     }
   }
 
-  if (moduleData === undefined) {
+  if (moduleData === undefined || moduleContent === undefined) {
     return (
       <div>
         <p style={{ color: "var(--muted)" }}>Loading module…</p>
@@ -90,7 +98,8 @@ export default function ModuleContentPage() {
   }
 
   const topic = moduleData.topics[0] ?? "Training"
-  const quizCount = moduleData.quizQuestions.length
+  const quizCount = quizData?.quizItems?.length ?? 0
+  const contentText = moduleContent.length > 0 ? moduleContent.join("\n\n") : null
 
   const visuals = moduleData.topics.slice(0, 3).map((t, i) => ({
     caption: t,
@@ -207,11 +216,17 @@ export default function ModuleContentPage() {
                 <span>In detail</span>
               </div>
               <div style={{ color: "var(--ink)", fontSize: "1rem" }}>
-                {moduleData.content.split("\n").map((paragraph, i) => (
-                  <p key={i} className={i > 0 ? "mt-4" : ""} style={{ color: "var(--ink)" }}>
-                    {paragraph}
+                {contentText ? (
+                  contentText.split("\n").map((paragraph: string, i: number) => (
+                    <p key={i} className={i > 0 ? "mt-4" : ""} style={{ color: "var(--ink)" }}>
+                      {paragraph}
+                    </p>
+                  ))
+                ) : (
+                  <p style={{ color: "var(--muted)" }}>
+                    Content is being processed. Please check back shortly.
                   </p>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

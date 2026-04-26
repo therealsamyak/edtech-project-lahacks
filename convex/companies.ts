@@ -81,7 +81,7 @@ export const registerCompany = mutation({
     console.log(`  Passphrase: ${company!.passphrase}`)
     console.log(`=========================================\n`)
 
-    return { uuid: company!.uuid, passphrase: company!.passphrase }
+    return { uuid: company!.uuid, passphrase: company!.passphrase, id: companyId }
   },
 })
 

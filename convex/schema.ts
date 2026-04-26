@@ -64,12 +64,6 @@ export default defineSchema({
   })
     .index("by_companyId", ["companyId"])
     .index("by_companyId_status", ["companyId", "processingStatus"]),
-  compliances: defineTable({
-    complianceId: v.string(),
-    name: v.string(),
-    passphrase: v.string(),
-    createdBy: v.string(),
-  }).index("by_compliance_id", ["complianceId"]),
   complianceDocs: defineTable({
     complianceId: v.string(),
     text: v.string(),
@@ -83,4 +77,15 @@ export default defineSchema({
       dimensions: 1536,
       filterFields: ["complianceId"],
     }),
+  moduleQuizzes: defineTable({
+    complianceId: v.string(),
+    module: v.string(),
+    quizItems: v.array(
+      v.object({
+        question: v.string(),
+        options: v.array(v.string()),
+        correctIndex: v.number(),
+      }),
+    ),
+  }).index("by_compliance_module", ["complianceId", "module"]),
 })

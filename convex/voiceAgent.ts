@@ -41,7 +41,10 @@ export const askComplianceWebhook = httpAction(async (ctx, request) => {
   }
 
   try {
-    const answer = await ctx.runAction(api.assistant.chat, { message: question })
+    const answer = await ctx.runAction(api.assistant.chat, {
+      message: question,
+      complianceId,
+    })
     return jsonResponse({ answer, source: "assistant.chat", complianceId })
   } catch (err) {
     console.error("[voice-agent webhook] assistant.chat failed:", err)

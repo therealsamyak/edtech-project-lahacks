@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import Link from "next/link"
-import { useMutation } from "convex/react"
+import { useMutation, useAction } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import {
@@ -32,6 +32,7 @@ export default function RegisterCompanyPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const registerCompany = useMutation(api.companies.registerCompany)
   const generateUploadUrl = useMutation(api.companies.generateUploadUrl)
+  const ingestDocument = useAction(api.ingestion.ingestDocument)
 
   const isSubmitDisabled = !companyName.trim() || files.length === 0 || isUploading || isProcessing
 
@@ -87,6 +88,15 @@ export default function RegisterCompanyPage() {
         setIsProcessing(false)
         setCredentialsShown(true)
       }, 800)
+
+      for (const doc of uploadedDocs) {
+        ingestDocument({
+          companyUuid: result.uuid,
+          companyId: result.id,
+          storageId: doc.storageId,
+          originalName: doc.originalName,
+        }).catch(() => {})
+      }
     } catch (err) {
       setIsUploading(false)
       setIsProcessing(false)

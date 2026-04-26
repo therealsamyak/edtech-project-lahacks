@@ -14,6 +14,10 @@ export default function QuizPage() {
   const moduleData = useQuery(api.training.getModule, {
     moduleId: params.moduleId as any,
   })
+  const quizData = useQuery(
+    api.modules.getModuleQuiz,
+    moduleData ? { complianceId: params.id, module: moduleData.title } : "skip",
+  )
   const submitQuiz = useMutation(api.quiz.submitQuiz)
 
   const [index, setIndex] = useState(0)
@@ -26,7 +30,7 @@ export default function QuizPage() {
   } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (moduleData === undefined) {
+  if (moduleData === undefined || quizData === undefined) {
     return (
       <div>
         <p style={{ color: "var(--muted)" }}>Loading module…</p>
@@ -34,16 +38,16 @@ export default function QuizPage() {
     )
   }
 
-  if (!moduleData || moduleData.quizQuestions.length === 0) {
+  if (!moduleData || !quizData || quizData.quizItems.length === 0) {
     return (
       <div>
-        <p>No quiz available for this module.</p>
+        <p>No quiz available for this module yet. Please check back after processing completes.</p>
         <Link href={`/training/${params.id}/${params.moduleId}`}>&larr; Back to module</Link>
       </div>
     )
   }
 
-  const quizQuestions = moduleData.quizQuestions
+  const quizQuestions = quizData.quizItems
   const total = quizQuestions.length
   const current = quizQuestions[index]
   const selected = answers[index]
