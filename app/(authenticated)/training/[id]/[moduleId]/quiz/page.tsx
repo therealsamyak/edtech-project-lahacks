@@ -42,6 +42,15 @@ export default function QuizPage() {
   }
 
   const quizQuestions = moduleData.quizQuestions
+  console.log(
+    "[DEBUG] Quiz Questions:",
+    quizQuestions.map((q) => ({
+      question: q.question,
+      correctAnswer: q.options[q.correctIndex],
+      correctIndex: q.correctIndex,
+      allOptions: q.options,
+    })),
+  )
   const total = quizQuestions.length
   const current = quizQuestions[index]
   const selected = answers[index]

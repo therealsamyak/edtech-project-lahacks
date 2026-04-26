@@ -26,6 +26,7 @@ export default defineSchema({
           title: v.string(),
           description: v.string(),
           content: v.string(),
+          plainLanguageSummary: v.optional(v.string()),
           duration: v.string(),
           topics: v.array(v.string()),
           highlights: v.array(v.string()),

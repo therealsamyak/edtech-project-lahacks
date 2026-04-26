@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { useParams } from "next/navigation"
-import { useAction } from "convex/react"
+import { useAction, useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Bot, Send, X, MessageCircle, Mic } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -23,9 +23,26 @@ export function FloatingButtonGroup() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const chat = useAction(api.assistant.chat)
 
+  const moduleData = useQuery(
+    api.training.getModule,
+    complianceId && moduleId
+      ? {
+          complianceDocumentId: decodeURIComponent(complianceId),
+          moduleTitle: decodeURIComponent(moduleId),
+        }
+      : "skip",
+  )
+
+  const systemContext = moduleData
+    ? [moduleData.plainLanguageSummary, ...(moduleData.highlights ?? [])].filter(Boolean).join("\n")
+    : undefined
+
   const agentId = process.env.NEXT_PUBLIC_ELEVENLABS_AGENT_ID
-  const params = useParams<{ id?: string }>()
+  const params = useParams<{ id?: string; moduleId?: string }>()
   const complianceId = typeof params?.id === "string" ? params.id : undefined
+  const moduleId = typeof params?.moduleId === "string" ? params.moduleId : undefined
+
+  if (!moduleId) return null
 
   useEffect(() => {
     if (!chatOpen && !voiceOpen) return
@@ -68,7 +85,11 @@ export function FloatingButtonGroup() {
     setIsLoading(true)
 
     try {
-      const response = await chat({ message: userText })
+      const response = await chat({
+        message: userText,
+        complianceDocumentId: complianceId,
+        systemContext,
+      })
       setMessages((prev) => [...prev, { role: "assistant", content: response }])
     } finally {
       setIsLoading(false)
@@ -141,7 +162,11 @@ export function FloatingButtonGroup() {
           </div>
 
           {agentId ? (
-            <VoiceAgent agentId={agentId} complianceId={complianceId} />
+            <VoiceAgent
+              agentId={agentId}
+              complianceId={complianceId}
+              moduleContext={systemContext}
+            />
           ) : (
             <div className="text-sm" style={{ color: "var(--ink-soft)" }}>
               <p className="mb-2" style={{ fontWeight: 500 }}>
