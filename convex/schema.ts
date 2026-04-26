@@ -9,7 +9,6 @@ export default defineSchema({
   users: defineTable({
     name: v.optional(v.string()),
     email: v.optional(v.string()),
-    progress: v.optional(v.record(v.string(), v.record(v.string(), v.number()))),
     emailVerificationTime: v.optional(v.number()),
     phoneVerificationTime: v.optional(v.number()),
     isAnonymous: v.optional(v.boolean()),
@@ -21,29 +20,32 @@ export default defineSchema({
     passphrase: v.string(),
     createdBy: v.optional(v.string()),
     createdAt: v.number(),
+    modules: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          description: v.string(),
+          content: v.string(),
+          duration: v.string(),
+          topics: v.array(v.string()),
+          highlights: v.array(v.string()),
+          quizQuestions: v.array(
+            v.object({
+              question: v.string(),
+              options: v.array(v.string()),
+              correctIndex: v.number(),
+            }),
+          ),
+          order: v.number(),
+        }),
+      ),
+    ),
   })
     .index("by_uuid", ["uuid"])
     .index("by_slug", ["slug"]),
-  trainingModules: defineTable({
-    complianceDocumentId: v.id("complianceDocuments"),
-    title: v.string(),
-    description: v.string(),
-    content: v.string(),
-    duration: v.string(),
-    topics: v.array(v.string()),
-    highlights: v.array(v.string()),
-    quizQuestions: v.array(
-      v.object({
-        question: v.string(),
-        options: v.array(v.string()),
-        correctIndex: v.number(),
-      }),
-    ),
-    order: v.number(),
-  }).index("by_complianceDocumentId", ["complianceDocumentId"]),
   quizResults: defineTable({
     userId: v.id("users"),
-    moduleId: v.id("trainingModules"),
+    moduleId: v.string(),
     score: v.number(),
     totalQuestions: v.number(),
     passed: v.boolean(),
@@ -79,15 +81,4 @@ export default defineSchema({
       dimensions: 1536,
       filterFields: ["complianceDocumentId"],
     }),
-  moduleQuizzes: defineTable({
-    complianceDocumentId: v.string(),
-    module: v.string(),
-    quizItems: v.array(
-      v.object({
-        question: v.string(),
-        options: v.array(v.string()),
-        correctIndex: v.number(),
-      }),
-    ),
-  }).index("by_document_module", ["complianceDocumentId", "module"]),
 })

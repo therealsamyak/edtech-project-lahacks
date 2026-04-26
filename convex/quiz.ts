@@ -5,16 +5,26 @@ import { ComplianceAIService } from "../src/services/ai"
 
 export const submitQuiz = mutation({
   args: {
-    moduleId: v.id("trainingModules"),
+    complianceDocumentId: v.string(),
+    moduleTitle: v.string(),
     answers: v.array(v.number()),
   },
   handler: async (ctx, args) => {
-    const moduleData = await ctx.db.get(args.moduleId)
-    if (!moduleData) {
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentId))
+      .unique()
+
+    if (!doc || !doc.modules) {
       throw new Error("Module not found")
     }
 
-    const questions = moduleData.quizQuestions
+    const mod = doc.modules.find((m) => m.title === args.moduleTitle)
+    if (!mod) {
+      throw new Error("Module not found")
+    }
+
+    const questions = mod.quizQuestions
     const totalQuestions = questions.length
 
     let score = 0
@@ -36,7 +46,7 @@ export const submitQuiz = mutation({
       if (user) {
         await ctx.db.insert("quizResults", {
           userId: user._id,
-          moduleId: args.moduleId,
+          moduleId: args.moduleTitle,
           score,
           totalQuestions,
           passed,

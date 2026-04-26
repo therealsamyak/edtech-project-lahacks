@@ -4,11 +4,18 @@ import { auth } from "./auth"
 
 export const getModule = query({
   args: {
-    moduleId: v.id("trainingModules"),
+    complianceDocumentId: v.string(),
+    moduleTitle: v.string(),
   },
   handler: async (ctx, args) => {
-    const moduleData = await ctx.db.get(args.moduleId)
-    return moduleData ?? null
+    const doc = await ctx.db
+      .query("complianceDocuments")
+      .withIndex("by_uuid", (q) => q.eq("uuid", args.complianceDocumentId))
+      .unique()
+
+    if (!doc || !doc.modules) return null
+
+    return doc.modules.find((m) => m.title === args.moduleTitle) ?? null
   },
 })
 
@@ -24,13 +31,7 @@ export const getModules = query({
 
     if (!document) return null
 
-    const modules = await ctx.db
-      .query("trainingModules")
-      .withIndex("by_complianceDocumentId", (q) => q.eq("complianceDocumentId", document._id))
-      .order("asc")
-      .collect()
-
-    return modules
+    return document.modules ?? []
   },
 })
 
@@ -84,26 +85,20 @@ export const getUserDocumentsWithModules = query({
     const userId = await auth.getUserId(ctx)
     if (!userId) return []
 
-    const userDocuments = await ctx.db
+    const userDocs = await ctx.db
       .query("userDocuments")
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .collect()
 
     const result = []
-    for (const ud of userDocuments) {
+    for (const ud of userDocs) {
       const document = await ctx.db.get(ud.complianceDocumentId)
       if (!document) continue
-
-      const modules = await ctx.db
-        .query("trainingModules")
-        .withIndex("by_complianceDocumentId", (q) => q.eq("complianceDocumentId", document._id))
-        .order("asc")
-        .collect()
 
       result.push({
         documentUuid: document.uuid,
         documentName: document.name,
-        modules,
+        modules: document.modules ?? [],
       })
     }
 
