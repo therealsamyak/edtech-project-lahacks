@@ -19,6 +19,7 @@
   "dependencies": {
     "@base-ui/react": "^1.4.1",
     "@convex-dev/auth": "^0.0.91",
+    "@dot-loaders/react": "^0.1.0",
     "@elevenlabs/elevenlabs-js": "^2.0.0",
     "@elevenlabs/react": "^1.0.0",
     "@esbuild/linux-x64": "^0.28.0",

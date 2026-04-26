@@ -8,6 +8,7 @@ import type { Id } from "@/convex/_generated/dataModel"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { PageLoader } from "@/components/PageLoader"
 import {
   Dialog,
   DialogContent,
@@ -288,7 +289,7 @@ export default function TrainingAccessPage() {
       </header>
 
       {!userDocuments ? (
-        <p style={{ color: "var(--muted)" }}>Loading your documents…</p>
+        <PageLoader label="Loading documents…" />
       ) : !hasDocuments ? (
         <div className="text-center py-16">
           <div

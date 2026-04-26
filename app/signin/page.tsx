@@ -1,10 +1,8 @@
 "use client"
 
 import { useAuthActions } from "@convex-dev/auth/react"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { ShieldCheck, ArrowRight } from "lucide-react"
-import { RisoMark } from "@/components/RisoMark"
+import { ArrowRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -14,19 +12,11 @@ export default function SignIn() {
   const [flow, setFlow] = useState<"signIn" | "signUp">("signIn")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
 
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-paper">
       <aside className="hidden lg:flex flex-col justify-between px-12 py-12 border-r border-line">
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 rounded-md flex items-center justify-center"
-            style={{ background: "var(--accent)", color: "var(--surface)" }}
-            aria-hidden="true"
-          >
-            <ShieldCheck className="w-5 h-5" />
-          </div>
           <div>
             <div
               className="font-display"
@@ -81,19 +71,19 @@ export default function SignIn() {
             const formData = new FormData(e.target as HTMLFormElement)
             formData.set("flow", flow)
             void signIn("password", formData)
+              .then(() => {
+                window.location.href = "/"
+              })
               .catch((err) => {
                 setError(err.message)
                 setLoading(false)
               })
-              .then(() => {
-                router.push("/")
-              })
           }}
         >
           <div className="mb-6">
-            <div className="lg:hidden flex items-center gap-3 mb-6">
-              <RisoMark size={36} />
-              <span className="font-display text-lg font-medium">CompliLearn</span>
+            <div className="lg:hidden mb-6">
+              <div className="font-display text-lg font-medium">CompliLearn</div>
+              <div className="eyebrow mt-0.5">Compliance training</div>
             </div>
 
             <div className="eyebrow mb-2">{flow === "signIn" ? "Sign in" : "Sign up"}</div>

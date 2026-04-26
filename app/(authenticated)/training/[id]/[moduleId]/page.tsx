@@ -7,6 +7,7 @@ import { useRef, useState } from "react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageLoader } from "@/components/PageLoader"
 import {
   ChevronLeft,
   Volume2,
@@ -74,11 +75,7 @@ export default function ModuleContentPage() {
   }
 
   if (moduleData === undefined) {
-    return (
-      <div>
-        <p style={{ color: "var(--muted)" }}>Loading module…</p>
-      </div>
-    )
+    return <PageLoader label="Loading module…" />
   }
 
   if (!moduleData) {
