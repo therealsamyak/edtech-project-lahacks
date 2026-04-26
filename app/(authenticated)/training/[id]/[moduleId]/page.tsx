@@ -53,12 +53,15 @@ export default function ModuleContentPage() {
 
   return (
     <article>
-      <Link href="/training">
-        <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
-          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          <span>All modules</span>
-        </Button>
-      </Link>
+      <Button
+        render={<Link href="/training" />}
+        nativeButton={false}
+        variant="ghost"
+        className="mb-6 -ml-2 inline-flex items-center gap-1"
+      >
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        <span>All modules</span>
+      </Button>
 
       <header className="mb-8">
         <div className="flex items-center gap-2 eyebrow mb-3">
@@ -83,12 +86,13 @@ export default function ModuleContentPage() {
             <Volume2 className="w-4 h-4" aria-hidden="true" />
             <span>Listen to summary</span>
           </Button>
-          <Link href={`/training/${params.id}/${params.moduleId}/quiz`}>
-            <Button>
-              <Play className="w-4 h-4" aria-hidden="true" />
-              <span>Take the quiz</span>
-            </Button>
-          </Link>
+          <Button
+            render={<Link href={`/training/${params.id}/${params.moduleId}/quiz`} />}
+            nativeButton={false}
+          >
+            <Play className="w-4 h-4" aria-hidden="true" />
+            <span>Take the quiz</span>
+          </Button>
         </div>
       </header>
 
@@ -198,12 +202,13 @@ export default function ModuleContentPage() {
               </p>
             </div>
           </div>
-          <Link href={`/training/${params.id}/${params.moduleId}/quiz`}>
-            <Button>
-              <span>Take the quiz</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </Link>
+          <Button
+            render={<Link href={`/training/${params.id}/${params.moduleId}/quiz`} />}
+            nativeButton={false}
+          >
+            <span>Take the quiz</span>
+            <ArrowRight className="w-4 h-4" />
+          </Button>
         </section>
       )}
     </article>

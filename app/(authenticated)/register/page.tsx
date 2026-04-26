@@ -114,127 +114,7 @@ export default function RegisterCompanyPage() {
       </header>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        <section className="lg:col-span-3 card elev" aria-labelledby="cred-heading">
-          <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
-            <div className="flex items-center gap-2">
-              <KeyRound className="w-4 h-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
-              <h2
-                id="cred-heading"
-                className="font-display"
-                style={{ fontSize: "1.1rem", fontWeight: 500 }}
-              >
-                Issued credentials
-              </h2>
-            </div>
-            <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-              Share these with employees so they can access training.
-            </p>
-          </div>
-
-          <div className="p-6 space-y-5">
-            {credentialsShown && credentials ? (
-              <>
-                <div>
-                  <div className="flex items-center gap-1.5 eyebrow mb-1.5">
-                    <Hash className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Company UUID</span>
-                  </div>
-                  <div
-                    className="flex items-stretch rounded-md overflow-hidden"
-                    style={{ border: "1px solid var(--line)" }}
-                  >
-                    <code
-                      className="flex-1 px-3 py-2.5 text-sm break-all"
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        background: "var(--paper)",
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {credentials.uuid}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(credentials.uuid, "uuid")}
-                      className="px-3 flex items-center gap-1.5 text-xs transition-colors border-l"
-                      style={{
-                        borderColor: "var(--line)",
-                        background:
-                          copiedField === "uuid" ? "var(--positive-soft)" : "var(--surface)",
-                        color: copiedField === "uuid" ? "var(--positive)" : "var(--ink-soft)",
-                      }}
-                      aria-label="Copy Company UUID"
-                    >
-                      {copiedField === "uuid" ? (
-                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-                      )}
-                      <span>{copiedField === "uuid" ? "Copied" : "Copy"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center gap-1.5 eyebrow mb-1.5">
-                    <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
-                    <span>Passphrase</span>
-                  </div>
-                  <div
-                    className="flex items-stretch rounded-md overflow-hidden"
-                    style={{ border: "1px solid var(--line)" }}
-                  >
-                    <code
-                      className="flex-1 px-3 py-2.5 text-sm break-all"
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        background: "var(--paper)",
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {credentials.passphrase}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(credentials.passphrase, "passphrase")}
-                      className="px-3 flex items-center gap-1.5 text-xs transition-colors border-l"
-                      style={{
-                        borderColor: "var(--line)",
-                        background:
-                          copiedField === "passphrase" ? "var(--positive-soft)" : "var(--surface)",
-                        color: copiedField === "passphrase" ? "var(--positive)" : "var(--ink-soft)",
-                      }}
-                      aria-label="Copy Passphrase"
-                    >
-                      {copiedField === "passphrase" ? (
-                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5" aria-hidden="true" />
-                      )}
-                      <span>{copiedField === "passphrase" ? "Copied" : "Copy"}</span>
-                    </button>
-                  </div>
-                </div>
-
-                <div
-                  className="flex gap-3 p-4 rounded-md text-sm"
-                  style={{ background: "var(--warning-soft)", color: "var(--ink-soft)" }}
-                  role="note"
-                >
-                  <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-                  <p>
-                    These credentials are shown once. Store them in your password manager — you'll
-                    need them every time someone sets up access.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm" style={{ color: "var(--muted)" }}>
-                Credentials will appear here after uploading your documentation.
-              </p>
-            )}
-          </div>
-        </section>
-
-        <section className="lg:col-span-2 card elev" aria-labelledby="upload-heading">
+        <section className="lg:col-span-3 card elev" aria-labelledby="upload-heading">
           <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-2">
               <Upload className="w-4 h-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
@@ -397,6 +277,126 @@ export default function RegisterCompanyPage() {
             >
               {isUploading ? "Uploading…" : isProcessing ? "Processing…" : "Register company"}
             </button>
+          </div>
+        </section>
+
+        <section className="lg:col-span-2 card elev" aria-labelledby="cred-heading">
+          <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
+            <div className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
+              <h2
+                id="cred-heading"
+                className="font-display"
+                style={{ fontSize: "1.1rem", fontWeight: 500 }}
+              >
+                Issued credentials
+              </h2>
+            </div>
+            <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+              Share these with employees so they can access training.
+            </p>
+          </div>
+
+          <div className="p-6 space-y-5">
+            {credentialsShown && credentials ? (
+              <>
+                <div>
+                  <div className="flex items-center gap-1.5 eyebrow mb-1.5">
+                    <Hash className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Company UUID</span>
+                  </div>
+                  <div
+                    className="flex items-stretch rounded-md overflow-hidden"
+                    style={{ border: "1px solid var(--line)" }}
+                  >
+                    <code
+                      className="flex-1 px-3 py-2.5 text-sm break-all"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        background: "var(--paper)",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      {credentials.uuid}
+                    </code>
+                    <button
+                      onClick={() => copyToClipboard(credentials.uuid, "uuid")}
+                      className="px-3 flex items-center gap-1.5 text-xs transition-colors border-l"
+                      style={{
+                        borderColor: "var(--line)",
+                        background:
+                          copiedField === "uuid" ? "var(--positive-soft)" : "var(--surface)",
+                        color: copiedField === "uuid" ? "var(--positive)" : "var(--ink-soft)",
+                      }}
+                      aria-label="Copy Company UUID"
+                    >
+                      {copiedField === "uuid" ? (
+                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                      )}
+                      <span>{copiedField === "uuid" ? "Copied" : "Copy"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-1.5 eyebrow mb-1.5">
+                    <KeyRound className="w-3.5 h-3.5" aria-hidden="true" />
+                    <span>Passphrase</span>
+                  </div>
+                  <div
+                    className="flex items-stretch rounded-md overflow-hidden"
+                    style={{ border: "1px solid var(--line)" }}
+                  >
+                    <code
+                      className="flex-1 px-3 py-2.5 text-sm break-all"
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        background: "var(--paper)",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      {credentials.passphrase}
+                    </code>
+                    <button
+                      onClick={() => copyToClipboard(credentials.passphrase, "passphrase")}
+                      className="px-3 flex items-center gap-1.5 text-xs transition-colors border-l"
+                      style={{
+                        borderColor: "var(--line)",
+                        background:
+                          copiedField === "passphrase" ? "var(--positive-soft)" : "var(--surface)",
+                        color: copiedField === "passphrase" ? "var(--positive)" : "var(--ink-soft)",
+                      }}
+                      aria-label="Copy Passphrase"
+                    >
+                      {copiedField === "passphrase" ? (
+                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5" aria-hidden="true" />
+                      )}
+                      <span>{copiedField === "passphrase" ? "Copied" : "Copy"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  className="flex gap-3 p-4 rounded-md text-sm"
+                  style={{ background: "var(--warning-soft)", color: "var(--ink-soft)" }}
+                  role="note"
+                >
+                  <Info className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                  <p>
+                    These credentials are shown once. Store them in your password manager — you'll
+                    need them every time someone sets up access.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
+                Credentials will appear here after uploading your documentation.
+              </p>
+            )}
           </div>
         </section>
       </div>

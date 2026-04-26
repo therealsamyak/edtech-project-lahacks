@@ -310,99 +310,95 @@ export default function TrainingAccessPage() {
             const isExpanded = expandedCompanies.has(group.companyUuid)
             return (
               <Card key={group.companyUuid} className="elev p-0" size="default">
-                <button
-                  type="button"
-                  onClick={() => toggleCompany(group.companyUuid)}
-                  className="w-full text-left"
-                >
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div
-                          className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
-                          style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
-                        >
-                          <Building2 className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 eyebrow mb-0.5">
-                            <span>Organization</span>
-                            <span aria-hidden="true">·</span>
-                            <span>{group.modules.length} modules</span>
-                          </div>
-                          <h2
-                            className="font-display m-0"
-                            style={{
-                              fontSize: "1.05rem",
-                              fontWeight: 500,
-                              lineHeight: 1.25,
-                            }}
-                          >
-                            {group.companyName}
-                          </h2>
-                        </div>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => toggleCompany(group.companyUuid)}
+                      className="flex items-center gap-4 text-left flex-1 min-w-0"
+                    >
+                      <div
+                        className="w-10 h-10 rounded-md flex items-center justify-center shrink-0"
+                        style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                      >
+                        <Building2 className="w-5 h-5" />
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            triggerUpload(group.companyUuid)
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 eyebrow mb-0.5">
+                          <span>Organization</span>
+                          <span aria-hidden="true">·</span>
+                          <span>{group.modules.length} modules</span>
+                        </div>
+                        <h2
+                          className="font-display m-0"
+                          style={{
+                            fontSize: "1.05rem",
+                            fontWeight: 500,
+                            lineHeight: 1.25,
                           }}
-                          disabled={uploadingForCompany === group.companyUuid}
-                          className="p-1.5 rounded-md transition-colors"
-                          style={{ color: "var(--muted)" }}
-                          aria-label="Upload additional documents"
-                          title="Upload additional documents"
                         >
-                          {uploadingForCompany === group.companyUuid ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Upload className="w-4 h-4" />
-                          )}
-                        </button>
-                        <AlertDialog>
-                          <AlertDialogTrigger
-                            className="p-1.5 rounded-md transition-colors hover:bg-red-50"
-                            style={{ color: "var(--destructive)" }}
-                            aria-label="Remove company"
-                            title="Remove company"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Remove &ldquo;{group.companyName}&rdquo;?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will remove the company from your training hub. You can always
-                                add it back later.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                variant="destructive"
-                                onClick={() =>
-                                  removeUserCompany({ companyUuid: group.companyUuid })
-                                }
-                              >
-                                Remove
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        {isExpanded ? (
-                          <ChevronUp className="w-5 h-5" style={{ color: "var(--muted)" }} />
-                        ) : (
-                          <ChevronDown className="w-5 h-5" style={{ color: "var(--muted)" }} />
-                        )}
+                          {group.companyName}
+                        </h2>
                       </div>
+                    </button>
+
+                    <div className="flex items-center gap-1 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => triggerUpload(group.companyUuid)}
+                        disabled={uploadingForCompany === group.companyUuid}
+                        className="p-1.5 rounded-md transition-colors"
+                        style={{ color: "var(--muted)" }}
+                        aria-label="Upload additional documents"
+                        title="Upload additional documents"
+                      >
+                        {uploadingForCompany === group.companyUuid ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4" />
+                        )}
+                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          className="p-1.5 rounded-md transition-colors hover:bg-red-50"
+                          style={{ color: "var(--destructive)" }}
+                          aria-label="Remove company"
+                          title="Remove company"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Remove &ldquo;{group.companyName}&rdquo;?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will remove the company from your training hub. You can always
+                              add it back later.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              onClick={() => removeUserCompany({ companyUuid: group.companyUuid })}
+                            >
+                              Remove
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      {isExpanded ? (
+                        <ChevronUp className="w-5 h-5 shrink-0" style={{ color: "var(--muted)" }} />
+                      ) : (
+                        <ChevronDown
+                          className="w-5 h-5 shrink-0"
+                          style={{ color: "var(--muted)" }}
+                        />
+                      )}
                     </div>
-                  </CardContent>
-                </button>
+                  </div>
+                </CardContent>
 
                 {isExpanded && group.modules.length > 0 && (
                   <div className="border-t" style={{ borderColor: "var(--line)" }}>

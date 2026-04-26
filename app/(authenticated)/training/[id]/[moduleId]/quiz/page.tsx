@@ -70,12 +70,15 @@ export default function QuizPage() {
 
     return (
       <article className="max-w-2xl mx-auto">
-        <Link href={`/training/${params.id}/${params.moduleId}`}>
-          <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
-            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-            <span>Back to module</span>
-          </Button>
-        </Link>
+        <Button
+          render={<Link href={`/training/${params.id}/${params.moduleId}`} />}
+          nativeButton={false}
+          variant="ghost"
+          className="mb-6 -ml-2 inline-flex items-center gap-1"
+        >
+          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+          <span>Back to module</span>
+        </Button>
 
         <Card className="elev-md p-0" size="default">
           <CardContent className="p-8 text-center">
@@ -119,12 +122,16 @@ export default function QuizPage() {
             </div>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              <Link href={`/training/${params.id}/${params.moduleId}`}>
-                <Button variant="outline">Review module</Button>
-              </Link>
-              <Link href="/training">
-                <Button>Finish</Button>
-              </Link>
+              <Button
+                render={<Link href={`/training/${params.id}/${params.moduleId}`} />}
+                nativeButton={false}
+                variant="outline"
+              >
+                Review module
+              </Button>
+              <Button render={<Link href="/training" />} nativeButton={false}>
+                Finish
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -134,12 +141,15 @@ export default function QuizPage() {
 
   return (
     <article className="max-w-2xl mx-auto">
-      <Link href={`/training/${params.id}/${params.moduleId}`}>
-        <Button variant="ghost" className="mb-6 -ml-2 inline-flex items-center gap-1">
-          <ChevronLeft className="w-4 h-4" aria-hidden="true" />
-          <span>Back to module</span>
-        </Button>
-      </Link>
+      <Button
+        render={<Link href={`/training/${params.id}/${params.moduleId}`} />}
+        nativeButton={false}
+        variant="ghost"
+        className="mb-6 -ml-2 inline-flex items-center gap-1"
+      >
+        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+        <span>Back to module</span>
+      </Button>
 
       <header className="mb-6">
         <div className="eyebrow mb-2">Quiz &middot; {moduleData.title}</div>
