@@ -47,6 +47,7 @@ import {
   Plus,
   Trash2,
   AlertCircle,
+  CircleCheck,
 } from "lucide-react"
 import { LoaderInline } from "@dot-loaders/react"
 
@@ -69,10 +70,28 @@ function DocumentGroupCard({
   const processingStatus = useQuery(api.training.getDocumentProcessingStatus, {
     documentUuid: group.documentUuid,
   })
+  const quizResults = useQuery(api.quiz.getUserResultsForDocument, {
+    complianceDocumentId: group.documentUuid,
+  })
 
   const status = processingStatus?.status ?? null
   const isProcessing = status === "pending"
   const hasError = status === "error"
+
+  const moduleScores = new Map<string, number>()
+  for (const r of quizResults ?? []) {
+    const existing = moduleScores.get(r.moduleTitle)
+    const pct = (r.score / r.totalQuestions) * 100
+    if (existing === undefined || pct > existing) {
+      moduleScores.set(r.moduleTitle, pct)
+    }
+  }
+
+  const overallProgress =
+    group.modules.length > 0
+      ? group.modules.reduce((sum: number, m: any) => sum + (moduleScores.get(m.title) ?? 0), 0) /
+        group.modules.length
+      : 0
 
   return (
     <Card key={group.documentUuid} className="elev p-0" size="default">
@@ -95,16 +114,29 @@ function DocumentGroupCard({
                 <span aria-hidden="true">·</span>
                 <span>{group.modules.length} modules</span>
               </div>
-              <h2
-                className="font-display m-0"
-                style={{
-                  fontSize: "1.05rem",
-                  fontWeight: 500,
-                  lineHeight: 1.25,
-                }}
-              >
-                {group.documentName}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2
+                  className="font-display m-0"
+                  style={{
+                    fontSize: "1.05rem",
+                    fontWeight: 500,
+                    lineHeight: 1.25,
+                  }}
+                >
+                  {group.documentName}
+                </h2>
+                <span
+                  className="inline-flex items-center gap-1 shrink-0 text-xs font-medium px-1.5 py-0.5 rounded"
+                  style={{
+                    fontFamily: "var(--font-mono)",
+                    background: overallProgress >= 70 ? "var(--accent-soft)" : "var(--paper-deep)",
+                    color: overallProgress >= 70 ? "var(--accent)" : "var(--ink-soft)",
+                  }}
+                >
+                  {overallProgress.toFixed(1)}%
+                  {overallProgress >= 70 && <CircleCheck className="w-3.5 h-3.5" />}
+                </span>
+              </div>
             </div>
           </button>
 
@@ -193,12 +225,33 @@ function DocumentGroupCard({
                       <Clock className="w-3 h-3" />
                       <span>{module.duration}</span>
                     </div>
-                    <h3
-                      className="font-display m-0"
-                      style={{ fontSize: "0.95rem", fontWeight: 500, lineHeight: 1.3 }}
-                    >
-                      {module.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3
+                        className="font-display m-0"
+                        style={{ fontSize: "0.95rem", fontWeight: 500, lineHeight: 1.3 }}
+                      >
+                        {module.title}
+                      </h3>
+                      <span
+                        className="inline-flex items-center gap-1 shrink-0 text-xs font-medium px-1.5 py-0.5 rounded"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          background:
+                            (moduleScores.get(module.title) ?? 0) >= 70
+                              ? "var(--accent-soft)"
+                              : "var(--paper-deep)",
+                          color:
+                            (moduleScores.get(module.title) ?? 0) >= 70
+                              ? "var(--accent)"
+                              : "var(--ink-soft)",
+                        }}
+                      >
+                        {(moduleScores.get(module.title) ?? 0).toFixed(1)}%
+                        {(moduleScores.get(module.title) ?? 0) >= 70 && (
+                          <CircleCheck className="w-3.5 h-3.5" />
+                        )}
+                      </span>
+                    </div>
                   </div>
 
                   <Button

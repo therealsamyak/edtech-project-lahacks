@@ -1,7 +1,23 @@
-import { mutation, action } from "./_generated/server"
+import { query, mutation, action } from "./_generated/server"
 import { v } from "convex/values"
 import { internal } from "./_generated/api"
 import { ComplianceAIService } from "../src/services/ai"
+import { auth } from "./auth"
+
+export const getUserResultsForDocument = query({
+  args: { complianceDocumentId: v.string() },
+  handler: async (ctx, args) => {
+    const userId = await auth.getUserId(ctx)
+    if (!userId) return []
+
+    return await ctx.db
+      .query("quizResults")
+      .withIndex("by_userId_documentId", (q) =>
+        q.eq("userId", userId).eq("complianceDocumentId", args.complianceDocumentId),
+      )
+      .collect()
+  },
+})
 
 export const submitQuiz = mutation({
   args: {
@@ -36,27 +52,20 @@ export const submitQuiz = mutation({
 
     const passed = score / totalQuestions >= 0.7
 
-    const identity = await ctx.auth.getUserIdentity()
-    if (identity) {
-      const user = await ctx.db
-        .query("users")
-        .withIndex("by_email", (q) => q.eq("email", identity.email!))
-        .first()
-
-      if (user) {
-        await ctx.db.insert("quizResults", {
-          userId: user._id,
-          complianceDocumentId: args.complianceDocumentId,
-          moduleTitle: args.moduleTitle,
-          score,
-          totalQuestions,
-          passed,
-          completedAt: Date.now(),
-        })
-      } else {
-        console.warn(`[quiz] No user found with email ${identity.email}. Quiz result not saved.`)
-      }
+    const userId = await auth.getUserId(ctx)
+    if (!userId) {
+      throw new Error("You must be logged in to submit a quiz.")
     }
+
+    await ctx.db.insert("quizResults", {
+      userId,
+      complianceDocumentId: args.complianceDocumentId,
+      moduleTitle: args.moduleTitle,
+      score,
+      totalQuestions,
+      passed,
+      completedAt: Date.now(),
+    })
 
     return { score, totalQuestions, passed }
   },
