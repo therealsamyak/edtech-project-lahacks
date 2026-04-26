@@ -3,6 +3,7 @@
 import { useConvexAuth } from "convex/react"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { PageLoader } from "@/components/PageLoader"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useConvexAuth()
@@ -15,7 +16,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, router])
 
   if (isLoading) {
-    return null
+    return <PageLoader />
   }
 
   if (!isAuthenticated) {

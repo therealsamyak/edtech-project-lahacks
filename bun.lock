@@ -7,6 +7,7 @@
       "dependencies": {
         "@base-ui/react": "^1.4.1",
         "@convex-dev/auth": "^0.0.91",
+        "@dot-loaders/react": "^0.1.0",
         "@elevenlabs/elevenlabs-js": "^2.0.0",
         "@elevenlabs/react": "^1.0.0",
         "@esbuild/linux-x64": "^0.28.0",
@@ -125,6 +126,12 @@
     "@bufbuild/protobuf": ["@bufbuild/protobuf@1.10.1", "", {}, "sha512-wJ8ReQbHxsAfXhrf9ixl0aYbZorRuOWpBNzm8pL8ftmSxQx/wnJD5Eg861NwJU/czy2VXFIebCeZnZrI9rktIQ=="],
 
     "@convex-dev/auth": ["@convex-dev/auth@0.0.91", "", { "dependencies": { "@oslojs/crypto": "^1.0.1", "@oslojs/encoding": "^1.1.0", "cookie": "^1.0.1", "is-network-error": "^1.1.0", "jose": "^5.2.2", "jwt-decode": "^4.0.0", "lucia": "^3.2.0", "oauth4webapi": "^3.1.2", "path-to-regexp": "^6.3.0", "server-only": "^0.0.1" }, "peerDependencies": { "@auth/core": "^0.37.0", "convex": "^1.17.0", "react": "^18.2.0 || ^19.0.0-0" }, "optionalPeers": ["react"], "bin": { "auth": "dist/bin.cjs" } }, "sha512-wLD4hszo3IhhMkwPs6ozWf0cUauwmhOvjUVn0g//kC338n/jApOjeDYWKCrn/qYUkveyDsbag5zrY8mVzA09Qg=="],
+
+    "@dot-loaders/core": ["@dot-loaders/core@0.1.0", "", {}, "sha512-0SzDzZ53ax4fLLneSuDaXsAPV+5ORB59ABfIjLzyTOT7GYYCxsBbXUuzieqW1Bm9O3JPWLbWDcBmpWp3D1FN7g=="],
+
+    "@dot-loaders/presets": ["@dot-loaders/presets@0.1.0", "", { "dependencies": { "@dot-loaders/core": "0.1.0" } }, "sha512-BqXsqz4TMCeCO8gWBizkvBsHkNHIa/TEuP0OtTNlFIuhREeumPkpA7X7ATsGZ4fXjuLeN342aMciXtk8zldbYQ=="],
+
+    "@dot-loaders/react": ["@dot-loaders/react@0.1.0", "", { "dependencies": { "@dot-loaders/core": "0.1.0", "@dot-loaders/presets": "0.1.0" }, "peerDependencies": { "react": "^19.0.0", "react-dom": "^19.0.0" } }, "sha512-iN3yCRA6Vwf3z2/dsqQiA0PCS4XBsezxJk7RJp87ezSk4VLm1hGQN9Fy2p5rtJr036KzVMCLmwLNDKOZ7/45XA=="],
 
     "@dotenvx/dotenvx": ["@dotenvx/dotenvx@1.63.0", "", { "dependencies": { "commander": "^11.1.0", "dotenv": "^17.2.1", "eciesjs": "^0.4.10", "execa": "^5.1.1", "fdir": "^6.2.0", "ignore": "^5.3.0", "object-treeify": "1.1.33", "picomatch": "^4.0.4", "which": "^4.0.0", "yocto-spinner": "^1.1.0" }, "bin": { "dotenvx": "src/cli/dotenvx.js" } }, "sha512-jjkmzIRu19uH78AjFInqfcALehbDCZZ7M09hurVawyqNxtOXEg2LR73L59y4QnzfYDEzjbhVzGAd2uDHu0D1aQ=="],
 

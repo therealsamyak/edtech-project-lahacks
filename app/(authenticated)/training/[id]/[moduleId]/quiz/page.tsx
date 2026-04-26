@@ -7,6 +7,7 @@ import { useQuery, useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { PageLoader } from "@/components/PageLoader"
 import { Check, ChevronLeft, ChevronRight, Award } from "lucide-react"
 
 export default function QuizPage() {
@@ -28,11 +29,7 @@ export default function QuizPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   if (moduleData === undefined) {
-    return (
-      <div>
-        <p style={{ color: "var(--muted)" }}>Loading module…</p>
-      </div>
-    )
+    return <PageLoader label="Loading quiz…" />
   }
 
   if (!moduleData || moduleData.quizQuestions.length === 0) {
