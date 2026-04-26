@@ -13,61 +13,71 @@ export const ingestComplianceDoc = internalAction({
     moduleName: v.string(),
   },
   handler: async (ctx, args) => {
-    const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
-
-    const compliance = await ctx.runQuery(internal.compliance.getComplianceRecord, {
-      slug: args.complianceId,
-    })
-    if (!compliance || compliance.passphrase !== args.passphrase) {
-      throw new Error("Unauthorized")
-    }
-
-    const url = (await ctx.storage.getUrl(args.storageId))!
-    const response = await fetch(url)
-    const pdfBuffer = Buffer.from(await response.arrayBuffer())
-    const data = await pdf(pdfBuffer)
-
-    const fullText = data.text
-      .replace(/\s+/g, " ")
-      .replace(/\u0000/g, "")
-      .trim()
-
-    if (fullText.length < 100) {
-      throw new Error("PDF seems empty or contains unreadable text.")
-    }
-
-    const moduleName = args.moduleName.replace(/\.[^/.]+$/, "")
-
-    const embedding = await ai.generateEmbedding(fullText.slice(0, 5000))
-
-    const processed = [
-      {
-        module: moduleName,
-        text: fullText,
-        embedding: embedding,
-      },
-    ]
-
-    await ctx.runMutation(internal.compliance.saveComplianceChunks, {
-      complianceDocumentId: compliance.uuid,
-      chunks: processed,
-    })
-
     try {
-      await ai.generateQuiz(fullText.slice(0, 8000))
+      const ai = new ComplianceAIService({ apiKey: process.env.OPENROUTER_API_KEY })
+
+      const compliance = await ctx.runQuery(internal.compliance.getComplianceRecord, {
+        slug: args.complianceId,
+      })
+      if (!compliance || compliance.passphrase !== args.passphrase) {
+        throw new Error("Unauthorized")
+      }
+
+      const url = (await ctx.storage.getUrl(args.storageId))!
+      const response = await fetch(url)
+      const pdfBuffer = Buffer.from(await response.arrayBuffer())
+      const data = await pdf(pdfBuffer)
+
+      const fullText = data.text
+        .replace(/\s+/g, " ")
+        .replace(/\u0000/g, "")
+        .trim()
+
+      if (fullText.length < 100) {
+        throw new Error("PDF seems empty or contains unreadable text.")
+      }
+
+      const moduleName = args.moduleName.replace(/\.[^/.]+$/, "")
+
+      const embedding = await ai.generateEmbedding(fullText.slice(0, 5000))
+
+      const processed = [
+        {
+          module: moduleName,
+          text: fullText,
+          embedding: embedding,
+        },
+      ]
+
+      await ctx.runMutation(internal.compliance.saveComplianceChunks, {
+        complianceDocumentId: compliance.uuid,
+        chunks: processed,
+      })
+
+      const module = await ai.generateModule(fullText.slice(0, 8000))
+
+      await ctx.runMutation(internal.compliance.saveModules, {
+        complianceDocumentId: compliance.uuid,
+        modules: [module],
+      })
+
+      await ctx.runMutation(internal.documents.updateDocumentStatus, {
+        storageId: args.storageId,
+        status: "completed",
+      })
+
+      return {
+        status: "success",
+        moduleName: module.title,
+        characterCount: fullText.length,
+      }
     } catch (e) {
-      console.error(`Quiz generation failed for module ${moduleName}:`, e)
-    }
-
-    await ctx.runMutation(internal.documents.updateDocumentStatus, {
-      storageId: args.storageId,
-      status: "completed",
-    })
-
-    return {
-      status: "success",
-      moduleName: moduleName,
-      characterCount: fullText.length,
+      console.error(`Ingest failed for ${args.moduleName}:`, e)
+      await ctx.runMutation(internal.documents.updateDocumentStatus, {
+        storageId: args.storageId,
+        status: "error",
+      })
+      throw e
     }
   },
 })

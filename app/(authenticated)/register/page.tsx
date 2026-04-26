@@ -1,22 +1,10 @@
 "use client"
 
 import { useState, useRef } from "react"
-import Link from "next/link"
 import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
-import {
-  Upload,
-  Copy,
-  Check,
-  ArrowLeft,
-  Info,
-  FileText,
-  KeyRound,
-  Hash,
-  X,
-  Loader2,
-} from "lucide-react"
+import { Upload, Copy, Check, Info, FileText, KeyRound, Hash, X, Loader2 } from "lucide-react"
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50 MB
 
@@ -114,7 +102,7 @@ export default function RegisterDocumentPage() {
       </header>
 
       <div className="grid lg:grid-cols-5 gap-6">
-        <section className="lg:col-span-3 card elev" aria-labelledby="upload-heading">
+        <section className="lg:col-span-3 card" aria-labelledby="upload-heading">
           <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-2">
               <Upload className="w-4 h-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
@@ -280,7 +268,7 @@ export default function RegisterDocumentPage() {
           </div>
         </section>
 
-        <section className="lg:col-span-2 card elev" aria-labelledby="cred-heading">
+        <section className="lg:col-span-2 card" aria-labelledby="cred-heading">
           <div className="px-6 py-5 border-b" style={{ borderColor: "var(--line)" }}>
             <div className="flex items-center gap-2">
               <KeyRound className="w-4 h-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
@@ -399,17 +387,6 @@ export default function RegisterDocumentPage() {
             )}
           </div>
         </section>
-      </div>
-
-      <div className="mt-8">
-        <Link
-          href="/training"
-          className="inline-flex items-center gap-1.5 text-sm transition-colors"
-          style={{ color: "var(--accent)" }}
-        >
-          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-          Back to Training
-        </Link>
       </div>
     </div>
   )
