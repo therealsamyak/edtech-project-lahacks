@@ -58,7 +58,7 @@ export default function SignIn() {
           </ul>
         </div>
 
-        <div className="eyebrow">SOC 2 · GDPR · HIPAA aware</div>
+        <div className="eyebrow">Policy-aware training</div>
       </aside>
 
       <div className="flex items-center justify-center px-6 py-12">

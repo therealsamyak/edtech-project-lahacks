@@ -138,8 +138,8 @@ export function MCPSetupDialog() {
           </DialogTitle>
           <DialogDescription>
             The compliance MCP server exposes <code>get_policy_section</code> and{" "}
-            <code>check_compliance</code> to your AI coding agent — covering HIPAA, GDPR, SOC 2, and
-            internal policies. Pick your editor, save the config to the listed path, and replace{" "}
+            <code>check_compliance</code> to your AI coding agent — checking code against your
+            company policies. Pick your editor, save the config to the listed path, and replace{" "}
             <code>&lt;ABS_PATH&gt;</code> with the absolute path to your local checkout.
           </DialogDescription>
         </DialogHeader>
